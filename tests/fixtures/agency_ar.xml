@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel>
+  <title>وكالة الأنباء التجريبية</title>
+  <link>https://agency.example/</link>
+  <language>ar</language>
+  <item>
+    <title>السعودية تعلن استثمارات جديدة بقيمة 50 مليار دولار في قطاع الطاقة</title>
+    <link>https://agency.example/news/123?utm_source=rss&amp;utm_medium=feed</link>
+    <guid isPermaLink="false">agency-123</guid>
+    <dc:creator>أحمد محمد</dc:creator>
+    <pubDate>Tue, 17 Nov 2026 08:00:00 +0300</pubDate>
+    <description><![CDATA[<p>أعلنت المملكة العربية السعودية اليوم عن حزمة استثمارات جديدة تستهدف تطوير مشاريع الطاقة والبنية التحتية في عدة مناطق.</p>]]></description>
+    <content:encoded><![CDATA[<p>FULL ARTICLE TEXT THAT MUST NEVER BE STORED. ]]>&lt;p&gt;more body&lt;/p&gt;</content:encoded>
+    <media:thumbnail url="https://agency.example/img/123.jpg"/>
+  </item>
+  <item>
+    <title>البنك المركزي يثبت أسعار الفائدة</title>
+    <link>https://agency.example/news/124</link>
+    <pubDate>Tue, 17 Nov 2026 09:30:00 +0300</pubDate>
+    <description>قرر البنك المركزي الإبقاء على أسعار الفائدة دون تغيير في اجتماعه اليوم.</description>
+  </item>
+  <item>
+    <title></title>
+    <link>https://agency.example/news/125</link>
+  </item>
+</channel>
+</rss>

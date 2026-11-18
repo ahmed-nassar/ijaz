@@ -1,0 +1,486 @@
+# Candidate publishers to vet (first pass, 18 Nov 2026).
+#
+# Rules (spec decisions): no wire services (D11), no Israeli or Iranian outlets (D13),
+# only sources whose published terms allow our use (D16). Priority markets first (D18):
+# Saudi Arabia, UAE, Egypt, Türkiye.
+#
+# Fields: owner_group and state_affiliated are filled only where well established;
+# everything marked "verify" must be checked during review. feed_hints are feed URLs
+# reported by third-party directories, not yet tested.
+#
+# Run:  collector vet sources/candidates.yaml --out sources/draft.yaml
+
+publishers:
+  # --- Pan-Arab and regional ---
+  - slug: aljazeera-ar
+    name: Al Jazeera (Arabic)
+    name_ar: الجزيرة نت
+    website: https://www.aljazeera.net/
+    country: QA
+    language: ar
+    owner_group: Al Jazeera Media Network
+    state_affiliated: true
+    categories: [politics, economy]
+    countries: []
+    feed_hints: [https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9]
+  - slug: aljazeera-en
+    name: Al Jazeera English
+    website: https://www.aljazeera.com/
+    country: QA
+    language: en
+    owner_group: Al Jazeera Media Network
+    state_affiliated: true
+    categories: [politics, economy]
+    feed_hints: [https://www.aljazeera.com/xml/rss/all.xml]
+  - slug: alarabiya-ar
+    name: Al Arabiya
+    name_ar: العربية
+    website: https://www.alarabiya.net/
+    country: AE
+    language: ar
+    owner_group: MBC Group  # verify ownership details
+    categories: [politics, economy]
+  - slug: alarabiya-en
+    name: Al Arabiya English
+    website: https://english.alarabiya.net/
+    country: AE
+    language: en
+    owner_group: MBC Group
+    categories: [politics, economy]
+  - slug: skynewsarabia
+    name: Sky News Arabia
+    name_ar: سكاي نيوز عربية
+    website: https://www.skynewsarabia.com/
+    country: AE
+    language: ar
+    categories: [politics, economy]
+    feed_hints: [https://www.skynewsarabia.com/rss.xml]
+  - slug: aawsat-ar
+    name: Asharq Al-Awsat
+    name_ar: الشرق الأوسط
+    website: https://aawsat.com/
+    country: SA
+    language: ar
+    owner_group: SRMG
+    categories: [politics, economy]
+  - slug: aawsat-en
+    name: Asharq Al-Awsat English
+    website: https://english.aawsat.com/
+    country: SA
+    language: en
+    owner_group: SRMG
+    categories: [politics, economy]
+  - slug: arabnews
+    name: Arab News
+    website: https://www.arabnews.com/
+    country: SA
+    language: en
+    owner_group: SRMG
+    categories: [politics, economy]
+    feed_hints: [https://www.arabnews.com/rss.xml]
+  - slug: independentarabia
+    name: Independent Arabia
+    name_ar: اندبندنت عربية
+    website: https://www.independentarabia.com/
+    country: SA
+    language: ar
+    owner_group: SRMG  # verify
+    categories: [politics, society]
+  - slug: asharqbusiness
+    name: Asharq Business with Bloomberg
+    name_ar: الشرق للأخبار - اقتصاد
+    website: https://asharqbusiness.com/
+    country: SA
+    language: ar
+    owner_group: SRMG
+    categories: [economy, markets, energy]
+  - slug: cnbcarabia
+    name: CNBC Arabia
+    name_ar: سي إن بي سي عربية
+    website: https://www.cnbcarabia.com/
+    country: AE
+    language: ar
+    categories: [economy, markets]
+  - slug: zawya
+    name: Zawya
+    website: https://www.zawya.com/
+    country: AE
+    language: en
+    owner_group: LSEG  # verify; carries many press releases
+    categories: [economy, markets, companies]
+  - slug: bbc-arabic
+    name: BBC Arabic
+    name_ar: بي بي سي عربي
+    website: https://www.bbc.com/arabic
+    country: GB
+    language: ar
+    owner_group: BBC
+    categories: [politics]
+    feed_hints: [https://feeds.bbci.co.uk/arabic/rss.xml]
+  - slug: france24-ar
+    name: France 24 Arabic
+    name_ar: فرانس 24
+    website: https://www.france24.com/ar/
+    country: FR
+    language: ar
+    owner_group: France Médias Monde
+    state_affiliated: true
+    categories: [politics]
+    feed_hints: [https://www.france24.com/ar/rss]
+  - slug: dw-ar
+    name: DW Arabic
+    name_ar: دويتشه فيله
+    website: https://www.dw.com/ar/
+    country: DE
+    language: ar
+    owner_group: Deutsche Welle
+    state_affiliated: true
+    categories: [politics]
+    feed_hints: [https://rss.dw.com/rdf/rss-ar-all]
+  - slug: guardian-me
+    name: The Guardian (Middle East)
+    website: https://www.theguardian.com/world/middleeast
+    country: GB
+    language: en
+    owner_group: Guardian Media Group
+    categories: [politics]
+    feed_hints: [https://www.theguardian.com/world/middleeast/rss]
+
+  # --- Saudi Arabia ---
+  - slug: spa
+    name: Saudi Press Agency
+    name_ar: واس
+    website: https://www.spa.gov.sa/
+    country: SA
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: aleqt
+    name: Al Eqtisadiah
+    name_ar: الاقتصادية
+    website: https://www.aleqt.com/
+    country: SA
+    language: ar
+    owner_group: SRMG
+    categories: [economy, markets, energy]
+    feed_hints: [https://www.aleqt.com/feed/rss_section/frontpage]
+  - slug: okaz
+    name: Okaz
+    name_ar: عكاظ
+    website: https://www.okaz.com.sa/
+    country: SA
+    language: ar
+    owner_group: Okaz Organization
+    categories: [politics, society]
+    feed_hints: [https://www.okaz.com.sa/rssFeed/0]
+  - slug: saudigazette
+    name: Saudi Gazette
+    website: https://saudigazette.com.sa/
+    country: SA
+    language: en
+    owner_group: Okaz Organization
+    categories: [politics, economy]
+    feed_hints: [https://saudigazette.com.sa/rssFeed/74]
+  - slug: aljazirah
+    name: Al-Jazirah
+    name_ar: الجزيرة (السعودية)
+    website: https://www.al-jazirah.com/
+    country: SA
+    language: ar
+    categories: [politics, society]
+    feed_hints: [https://www.al-jazirah.com/rss/ln.xml]
+  - slug: alriyadh
+    name: Al Riyadh
+    name_ar: الرياض
+    website: https://www.alriyadh.com/
+    country: SA
+    language: ar
+    categories: [politics, economy]
+  - slug: argaam
+    name: Argaam
+    name_ar: أرقام
+    website: https://www.argaam.com/
+    country: SA
+    language: ar
+    categories: [markets, companies, economy]
+  - slug: sama
+    name: Saudi Central Bank
+    name_ar: البنك المركزي السعودي
+    website: https://www.sama.gov.sa/
+    country: SA
+    language: ar
+    state_affiliated: true
+    categories: [central-banks]
+  - slug: gastat
+    name: General Authority for Statistics (Saudi Arabia)
+    name_ar: الهيئة العامة للإحصاء
+    website: https://www.stats.gov.sa/
+    country: SA
+    language: ar
+    state_affiliated: true
+    categories: [macroeconomics]
+
+  # --- United Arab Emirates ---
+  - slug: wam-ar
+    name: Emirates News Agency
+    name_ar: وام
+    website: https://www.wam.ae/ar
+    country: AE
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: wam-en
+    name: Emirates News Agency (English)
+    website: https://www.wam.ae/en
+    country: AE
+    language: en
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: thenational
+    name: The National
+    website: https://www.thenationalnews.com/
+    country: AE
+    language: en
+    owner_group: International Media Investments  # verify
+    categories: [politics, economy]
+  - slug: gulfnews
+    name: Gulf News
+    website: https://gulfnews.com/
+    country: AE
+    language: en
+    categories: [politics, economy]
+  - slug: khaleejtimes
+    name: Khaleej Times
+    website: https://www.khaleejtimes.com/
+    country: AE
+    language: en
+    categories: [politics, economy]
+  - slug: albayan
+    name: Al Bayan
+    name_ar: البيان
+    website: https://www.albayan.ae/
+    country: AE
+    language: ar
+    owner_group: Dubai Media Incorporated
+    state_affiliated: true  # verify
+    categories: [politics, economy]
+  - slug: alkhaleej
+    name: Al Khaleej
+    name_ar: الخليج
+    website: https://www.alkhaleej.ae/
+    country: AE
+    language: ar
+    categories: [politics, economy]
+  - slug: cbuae
+    name: Central Bank of the UAE
+    website: https://www.centralbank.ae/
+    country: AE
+    language: en
+    state_affiliated: true
+    categories: [central-banks]
+
+  # --- Egypt ---
+  - slug: youm7
+    name: Youm7
+    name_ar: اليوم السابع
+    website: https://www.youm7.com/
+    country: EG
+    language: ar
+    categories: [politics, society]
+  - slug: masrawy
+    name: Masrawy
+    name_ar: مصراوي
+    website: https://www.masrawy.com/
+    country: EG
+    language: ar
+    categories: [politics, society]
+  - slug: ahram-ar
+    name: Al-Ahram
+    name_ar: الأهرام
+    website: https://gate.ahram.org.eg/
+    country: EG
+    language: ar
+    owner_group: Al-Ahram Establishment
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: ahram-en
+    name: Ahram Online
+    website: https://english.ahram.org.eg/
+    country: EG
+    language: en
+    owner_group: Al-Ahram Establishment
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: almasryalyoum
+    name: Al-Masry Al-Youm
+    name_ar: المصري اليوم
+    website: https://www.almasryalyoum.com/
+    country: EG
+    language: ar
+    categories: [politics, society]
+  - slug: enterprise
+    name: Enterprise
+    website: https://enterprise.press/
+    country: EG
+    language: en
+    categories: [economy, companies]  # verify access model
+  - slug: mena
+    name: Middle East News Agency
+    name_ar: وكالة أنباء الشرق الأوسط
+    website: https://www.mena.org.eg/
+    country: EG
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: cbe
+    name: Central Bank of Egypt
+    name_ar: البنك المركزي المصري
+    website: https://www.cbe.org.eg/
+    country: EG
+    language: ar
+    state_affiliated: true
+    categories: [central-banks]
+
+  # --- Türkiye ---
+  - slug: aa-ar
+    name: Anadolu Agency (Arabic)
+    name_ar: الأناضول
+    website: https://www.aa.com.tr/ar
+    country: TR
+    language: ar
+    owner_group: Anadolu Agency
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: aa-en
+    name: Anadolu Agency (English)
+    website: https://www.aa.com.tr/en
+    country: TR
+    language: en
+    owner_group: Anadolu Agency
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: aa-tr
+    name: Anadolu Ajansı
+    website: https://www.aa.com.tr/tr
+    country: TR
+    language: tr
+    owner_group: Anadolu Agency
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: trthaber
+    name: TRT Haber
+    website: https://www.trthaber.com/
+    country: TR
+    language: tr
+    owner_group: TRT
+    state_affiliated: true
+    categories: [politics]
+  - slug: trtworld
+    name: TRT World
+    website: https://www.trtworld.com/
+    country: TR
+    language: en
+    owner_group: TRT
+    state_affiliated: true
+    categories: [politics]
+  - slug: dailysabah
+    name: Daily Sabah
+    website: https://www.dailysabah.com/
+    country: TR
+    language: en
+    categories: [politics, economy]
+  - slug: hurriyetdailynews
+    name: Hürriyet Daily News
+    website: https://www.hurriyetdailynews.com/
+    country: TR
+    language: en
+    categories: [politics, economy]
+  - slug: bloomberght
+    name: Bloomberg HT
+    website: https://www.bloomberght.com/
+    country: TR
+    language: tr
+    categories: [economy, markets]
+  - slug: tcmb
+    name: Central Bank of the Republic of Türkiye
+    website: https://www.tcmb.gov.tr/
+    country: TR
+    language: tr
+    state_affiliated: true
+    categories: [central-banks]
+
+  # --- Rest of the region ---
+  - slug: qna
+    name: Qatar News Agency
+    name_ar: قنا
+    website: https://www.qna.org.qa/
+    country: QA
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: gulftimes
+    name: Gulf Times
+    website: https://www.gulf-times.com/
+    country: QA
+    language: en
+    categories: [politics, economy]
+    feed_hints: [https://full.gulf-times.com/Rss/Index]
+  - slug: peninsula
+    name: The Peninsula
+    website: https://thepeninsulaqatar.net/
+    country: QA
+    language: en
+    categories: [politics, economy]
+  - slug: kuna
+    name: Kuwait News Agency
+    name_ar: كونا
+    website: https://www.kuna.net.kw/
+    country: KW
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: alqabas
+    name: Al-Qabas
+    name_ar: القبس
+    website: https://www.alqabas.com/
+    country: KW
+    language: ar
+    categories: [politics, economy]
+  - slug: ona
+    name: Oman News Agency
+    name_ar: وكالة الأنباء العمانية
+    website: https://omannews.gov.om/
+    country: OM
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: petra
+    name: Jordan News Agency (Petra)
+    name_ar: بترا
+    website: https://petra.gov.jo/
+    country: JO
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: bna
+    name: Bahrain News Agency
+    name_ar: بنا
+    website: https://www.bna.bh/
+    country: BH
+    language: ar
+    state_affiliated: true
+    categories: [politics, economy]
+  - slug: annahar
+    name: Annahar
+    name_ar: النهار
+    website: https://www.annahar.com/
+    country: LB
+    language: ar
+    categories: [politics]
+  - slug: hespress
+    name: Hespress
+    name_ar: هسبريس
+    website: https://www.hespress.com/
+    country: MA
+    language: ar
+    categories: [politics, society]
