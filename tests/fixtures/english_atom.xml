@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+  <title>Example Gulf Business</title>
+  <id>urn:example:gulf</id>
+  <updated>2026-11-17T07:00:00Z</updated>
+  <entry>
+    <title>Saudi Arabia unveils $50bn energy investment package</title>
+    <link rel="alternate" href="https://gulf.example/business/saudi-energy-package?fbclid=abc"/>
+    <id>urn:example:gulf:1</id>
+    <updated>2026-11-17T07:00:00Z</updated>
+    <author><name>Jane Doe</name></author>
+    <summary type="html">&lt;b&gt;Riyadh&lt;/b&gt; announced a package aimed at energy and infrastructure projects.</summary>
+  </entry>
+</feed>
