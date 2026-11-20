@@ -10,6 +10,11 @@ primary_region = "fra"
 [build]
   dockerfile = "Dockerfile"
 
+[env]
+  # Poll in 20-minute rounds so Neon's compute can scale to zero between them
+  # (about 55 compute hours a month instead of ~180; the free plan allows 100).
+  COLLECTOR_ROUND_MINUTES = "20"
+
 [deploy]
   # Runs once per deploy in a temporary machine, before the worker is replaced.
   # Both steps are idempotent: tables are created if missing, sources are upserted.

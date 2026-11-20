@@ -42,6 +42,10 @@ class Settings:
     min_interval: int = 5 * 60
     max_interval: int = 30 * 60
     max_backoff: int = 6 * 60 * 60
+    # When set, `run` polls in rounds this many minutes apart and keeps no database
+    # connection open in between, so a serverless database (Neon) can sleep. 0 means
+    # poll continuously, checking for due feeds every 30 seconds.
+    round_minutes: int = field(default_factory=lambda: _int("COLLECTOR_ROUND_MINUTES", 0))
     pause_after_failures: int = 20
     # Page check reads at most this many bytes, and stops at </head>.
     page_check_max_bytes: int = 256 * 1024

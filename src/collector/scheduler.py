@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+import time
+from datetime import datetime, timedelta, timezone
+from typing import Callable
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -15,21 +17,54 @@ from .models import Source
 log = logging.getLogger("collector")
 
 
-def due_sources(sessions: sessionmaker[Session], only: list[str] | None = None) -> list[int]:
+def due_sources(
+    sessions: sessionmaker[Session], only: list[str] | None = None, horizon_seconds: int = 0
+) -> list[int]:
+    """Active, unpaused sources due now, or within ``horizon_seconds`` from now."""
+    cutoff = datetime.now(timezone.utc) + timedelta(seconds=horizon_seconds)
     with sessions() as session:
         query = select(Source.id).where(Source.active.is_(True), Source.paused.is_(False))
         if only:
             query = query.where(Source.slug.in_(only))
         else:
             query = query.where(
-                or_(Source.next_poll_at.is_(None), Source.next_poll_at <= datetime.now(timezone.utc))
+                or_(Source.next_poll_at.is_(None), Source.next_poll_at <= cutoff)
             )
         return list(session.scalars(query.order_by(Source.next_poll_at)))
 
 
-async def poll_once(collector: Collector, only: list[str] | None = None) -> list[PollReport]:
-    ids = due_sources(collector.sessions, only)
+async def poll_once(
+    collector: Collector, only: list[str] | None = None, horizon_seconds: int = 0
+) -> list[PollReport]:
+    ids = due_sources(collector.sessions, only, horizon_seconds)
     return await asyncio.gather(*(collector.poll(i) for i in ids))
+
+
+async def run_rounds(
+    collector: Collector,
+    round_seconds: int,
+    release_connections: Callable[[], None] = lambda: None,
+    rounds: int | None = None,
+) -> None:
+    """Poll in rounds, then leave the database alone until the next round.
+
+    Each round polls every source due before the next round starts, waits for all of
+    them, and closes the pooled connections. Between rounds nothing touches the
+    database, so a serverless Postgres such as Neon can scale its compute to zero.
+    """
+    done = 0
+    while rounds is None or done < rounds:
+        started = time.monotonic()
+        try:
+            reports = await poll_once(collector, horizon_seconds=round_seconds)
+            log.info("round finished: %d feeds polled", len(reports))
+        except Exception:
+            log.exception("round failed")
+        finally:
+            release_connections()
+        done += 1
+        if rounds is None or done < rounds:
+            await asyncio.sleep(max(0.0, round_seconds - (time.monotonic() - started)))
 
 
 async def run_forever(collector: Collector, tick_seconds: int = 30) -> None:

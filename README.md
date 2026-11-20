@@ -55,7 +55,9 @@ fly scale count 1 -a ijaz-collector   # exactly one worker
 fly logs -a ijaz-collector
 ```
 
-Use Neon's direct connection string (host without `-pooler`): the worker keeps a few long-lived connections and needs no pooler.
+Use Neon's direct connection string (host without `-pooler`).
+
+`fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the worker polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
 
 ## Tests
 

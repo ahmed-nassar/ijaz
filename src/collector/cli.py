@@ -17,7 +17,7 @@ from .ingest import Collector
 from .models import Alert, Article, FetchLog, Publisher, Source
 from .registry import load_source_list, read_source_list
 from .robots import RobotsChecker
-from .scheduler import poll_once, run_forever
+from .scheduler import poll_once, run_forever, run_rounds
 from .vet import draft_source_list, vet_all, write_yaml
 
 
@@ -72,7 +72,11 @@ def main(argv: list[str] | None = None) -> int:
         asyncio.run(with_fetcher(go))
         return 0
     if args.command == "run":
-        asyncio.run(with_fetcher(lambda f: run_forever(Collector(settings, sessions, f))))
+        if settings.round_minutes > 0:
+            asyncio.run(with_fetcher(lambda f: run_rounds(
+                Collector(settings, sessions, f), settings.round_minutes * 60, engine.dispose)))
+        else:
+            asyncio.run(with_fetcher(lambda f: run_forever(Collector(settings, sessions, f))))
         return 0
     if args.command == "vet":
         init_db(engine)  # robots cache lives in the database
