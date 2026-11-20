@@ -1,0 +1,1614 @@
+publishers:
+- slug: aljazeera-ar
+  name: Al Jazeera (Arabic)
+  name_ar: الجزيرة نت
+  website: https://www.aljazeera.net/
+  country: QA
+  language: ar
+  owner_group: Al Jazeera Media Network
+  state_affiliated: true
+  categories: &id002
+  - politics
+  - economy
+  countries: &id001 []
+  terms_reviewed: true
+  feeds:
+  - slug: aljazeera-ar-1
+    url: https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9
+    language: ar
+    countries: *id001
+    categories: *id002
+    enabled: false
+    vetting:
+      status: ok
+      items: 25
+      newest_age_hours: 3.5
+      with_summary_pct: 100
+  terms_note: 'Excluded: site agreement limits use to personal, non-commercial and
+    bans bots/scrapers without written permission (reviewed 18 Nov 2026)'
+- slug: aljazeera-en
+  name: Al Jazeera English
+  website: https://www.aljazeera.com/
+  country: QA
+  language: en
+  owner_group: Al Jazeera Media Network
+  state_affiliated: true
+  categories: &id003
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: aljazeera-en-1
+    url: https://www.aljazeera.com/xml/rss/all.xml
+    language: en
+    countries:
+    - QA
+    categories: *id003
+    enabled: false
+    vetting:
+      status: ok
+      items: 25
+      newest_age_hours: 0.3
+      with_summary_pct: 100
+  terms_note: 'Excluded: terms limit use to personal, non-commercial and ban spiders/scrapers/bots
+    without written permission (reviewed 18 Nov 2026)'
+- slug: alarabiya-ar
+  name: Al Arabiya
+  name_ar: العربية
+  website: https://www.alarabiya.net/
+  country: AE
+  language: ar
+  owner_group: MBC Group
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: alarabiya-en
+  name: Al Arabiya English
+  website: https://english.alarabiya.net/
+  country: AE
+  language: en
+  owner_group: MBC Group
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: skynewsarabia
+  name: Sky News Arabia
+  name_ar: سكاي نيوز عربية
+  website: https://www.skynewsarabia.com/
+  country: AE
+  language: ar
+  categories: &id004
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: skynewsarabia-1
+    url: https://www.skynewsarabia.com/rss.xml
+    language: ar
+    countries:
+    - AE
+    categories: *id004
+    enabled: false
+    vetting:
+      status: ok
+      items: 86
+      newest_age_hours: 0.6
+      with_summary_pct: 100
+  terms_note: 'Excluded: terms 2.4-2.5 allow personal non-commercial use only and
+    require written consent for any automated processing (reviewed 18 Nov 2026)'
+- slug: aawsat-ar
+  name: Asharq Al-Awsat
+  name_ar: الشرق الأوسط
+  website: https://aawsat.com/
+  country: SA
+  language: ar
+  owner_group: SRMG
+  categories: &id005
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: aawsat-ar-3
+    url: https://aawsat.com/feed
+    language: ar
+    countries:
+    - SA
+    categories: *id005
+    enabled: false
+    vetting:
+      status: ok
+      items: 300
+      newest_age_hours: 0.1
+      with_summary_pct: 100
+  terms_note: 'Excluded: terms require the publisher''s approval before creating links
+    to the site (reviewed 18 Nov 2026)'
+- slug: aawsat-en
+  name: Asharq Al-Awsat English
+  website: https://english.aawsat.com/
+  country: SA
+  language: en
+  owner_group: SRMG
+  categories: &id006
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: aawsat-en-3
+    url: https://english.aawsat.com/feed
+    language: en
+    countries:
+    - SA
+    categories: *id006
+    enabled: false
+    vetting:
+      status: ok
+      items: 300
+      newest_age_hours: 0.3
+      with_summary_pct: 0
+  terms_note: 'Excluded: same publisher as aawsat-ar, whose terms require approval
+    before linking (reviewed 18 Nov 2026)'
+- slug: arabnews
+  name: Arab News
+  website: https://www.arabnews.com/
+  country: SA
+  language: en
+  owner_group: SRMG
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: independentarabia
+  name: Independent Arabia
+  name_ar: اندبندنت عربية
+  website: https://www.independentarabia.com/
+  country: SA
+  language: ar
+  owner_group: SRMG
+  categories: &id007
+  - politics
+  - society
+  terms_reviewed: true
+  feeds:
+  - slug: independentarabia-1
+    url: https://www.independentarabia.com/rss.xml
+    language: ar
+    countries:
+    - SA
+    categories: *id007
+    enabled: true
+    vetting:
+      status: ok
+      items: 100
+      newest_age_hours: 23.5
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy notice found; no ban on feeds, linking,
+      bots or quoting'
+  terms_note: 'Allowed: only a privacy notice found; no ban on feeds, linking, bots
+    or quoting (reviewed 18 Nov 2026)'
+- slug: asharqbusiness
+  name: Asharq Business with Bloomberg
+  name_ar: الشرق للأخبار - اقتصاد
+  website: https://asharqbusiness.com/
+  country: SA
+  language: ar
+  owner_group: SRMG
+  categories:
+  - economy
+  - markets
+  - energy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: cnbcarabia
+  name: CNBC Arabia
+  name_ar: سي إن بي سي عربية
+  website: https://www.cnbcarabia.com/
+  country: AE
+  language: ar
+  categories:
+  - economy
+  - markets
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: zawya
+  name: Zawya
+  website: https://www.zawya.com/
+  country: AE
+  language: en
+  owner_group: LSEG
+  categories:
+  - economy
+  - markets
+  - companies
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: bbc-arabic
+  name: BBC Arabic
+  name_ar: بي بي سي عربي
+  website: https://www.bbc.com/arabic
+  country: GB
+  language: ar
+  owner_group: BBC
+  categories: &id008
+  - politics
+  terms_reviewed: true
+  feeds:
+  - slug: bbc-arabic-1
+    url: https://feeds.bbci.co.uk/arabic/rss.xml
+    language: ar
+    countries:
+    - GB
+    categories: *id008
+    enabled: false
+    vetting:
+      status: ok
+      items: 25
+      newest_age_hours: 0.8
+      with_summary_pct: 100
+  terms_note: 'Excluded: BBC terms of use s15 require permission (and possibly a fee)
+    for business use of RSS feeds (reviewed 18 Nov 2026)'
+- slug: france24-ar
+  name: France 24 Arabic
+  name_ar: فرانس 24
+  website: https://www.france24.com/ar/
+  country: FR
+  language: ar
+  owner_group: France Médias Monde
+  state_affiliated: true
+  categories: &id009
+  - politics
+  terms_reviewed: false
+  feeds:
+  - slug: france24-ar-1
+    url: https://www.france24.com/ar/rss
+    language: ar
+    countries:
+    - FR
+    categories: *id009
+    enabled: false
+    vetting:
+      status: ok
+      items: 24
+      newest_age_hours: 0.1
+      with_summary_pct: 100
+  terms_note: 'Not enabled: terms (legal notice on francemm.com) could not be read;
+    that host is blocked by our network (reviewed 18 Nov 2026)'
+- slug: dw-ar
+  name: DW Arabic
+  name_ar: دويتشه فيله
+  website: https://www.dw.com/ar/
+  country: DE
+  language: ar
+  owner_group: Deutsche Welle
+  state_affiliated: true
+  categories: &id010
+  - politics
+  terms_reviewed: true
+  feeds:
+  - slug: dw-ar-1
+    url: https://rss.dw.com/rdf/rss-ar-all
+    language: ar
+    countries:
+    - DE
+    categories: *id010
+    enabled: true
+    vetting:
+      status: ok
+      items: 48
+      newest_age_hours: 0.6
+      with_summary_pct: 100
+    licence_note: 'Allowed: DW publishes its RSS feeds openly for subscription; legal
+      notice has no usage restrictions'
+  - slug: dw-ar-2
+    url: https://rss.dw.com/rdf/rss-ar-bus
+    language: ar
+    countries:
+    - DE
+    categories: *id010
+    enabled: true
+    vetting:
+      status: ok
+      items: 10
+      newest_age_hours: 0.6
+      with_summary_pct: 100
+    licence_note: 'Allowed: DW publishes its RSS feeds openly for subscription; legal
+      notice has no usage restrictions'
+  terms_note: 'Allowed: DW publishes its RSS feeds openly for subscription; legal
+    notice has no usage restrictions (reviewed 18 Nov 2026)'
+- slug: guardian-me
+  name: The Guardian (Middle East)
+  website: https://www.theguardian.com/world/middleeast
+  country: GB
+  language: en
+  owner_group: Guardian Media Group
+  categories: &id011
+  - politics
+  terms_reviewed: true
+  feeds:
+  - slug: guardian-me-1
+    url: https://www.theguardian.com/world/middleeast/rss
+    language: en
+    countries:
+    - GB
+    categories: *id011
+    enabled: false
+    vetting:
+      status: ok
+      items: 20
+      newest_age_hours: 0.8
+      with_summary_pct: 100
+  terms_note: 'Excluded: terms ban robots/crawlers; RSS feeds for personal non-commercial
+    use; aggregators licensed via NLA (reviewed 18 Nov 2026)'
+- slug: spa
+  name: Saudi Press Agency
+  name_ar: واس
+  website: https://www.spa.gov.sa/
+  country: SA
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: aleqt
+  name: Al Eqtisadiah
+  name_ar: الاقتصادية
+  website: https://www.aleqt.com/
+  country: SA
+  language: ar
+  owner_group: SRMG
+  categories:
+  - economy
+  - markets
+  - energy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: okaz
+  name: Okaz
+  name_ar: عكاظ
+  website: https://www.okaz.com.sa/
+  country: SA
+  language: ar
+  owner_group: Okaz Organization
+  categories: &id012
+  - politics
+  - society
+  terms_reviewed: true
+  feeds:
+  - slug: okaz-1
+    url: https://www.okaz.com.sa/rssFeed/0
+    language: ar
+    countries:
+    - SA
+    categories: *id012
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 5.7
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy/usage policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: okaz-2
+    url: https://www.okaz.com.sa/rssFeed/1
+    language: ar
+    countries:
+    - SA
+    categories: *id012
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 4.3
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy/usage policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: okaz-3
+    url: https://www.okaz.com.sa/rssFeed/2
+    language: ar
+    countries:
+    - SA
+    categories: *id012
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 2.0
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy/usage policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: okaz-4
+    url: https://www.okaz.com.sa/rssFeed/3
+    language: ar
+    countries:
+    - SA
+    categories: *id012
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 2.8
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy/usage policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: okaz-5
+    url: https://www.okaz.com.sa/rssFeed/4
+    language: ar
+    countries:
+    - SA
+    categories: *id012
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 1.1
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy/usage policy found; no ban on feeds, linking,
+      bots or quoting'
+  terms_note: 'Allowed: only a privacy/usage policy found; no ban on feeds, linking,
+    bots or quoting (reviewed 18 Nov 2026)'
+- slug: saudigazette
+  name: Saudi Gazette
+  website: https://saudigazette.com.sa/
+  country: SA
+  language: en
+  owner_group: Okaz Organization
+  categories: &id013
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: saudigazette-1
+    url: https://saudigazette.com.sa/rssFeed/74
+    language: en
+    countries:
+    - SA
+    categories: *id013
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 0.9
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: saudigazette-2
+    url: https://saudigazette.com.sa/rssFeed/72
+    language: en
+    countries:
+    - SA
+    categories: *id013
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 4.9
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: saudigazette-3
+    url: https://saudigazette.com.sa/rssFeed/73
+    language: en
+    countries:
+    - SA
+    categories: *id013
+    enabled: false
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 49.6
+      with_summary_pct: 100
+  terms_note: 'Allowed: only a privacy policy found; no ban on feeds, linking, bots
+    or quoting (reviewed 18 Nov 2026)'
+- slug: aljazirah
+  name: Al-Jazirah
+  name_ar: الجزيرة (السعودية)
+  website: https://www.al-jazirah.com/
+  country: SA
+  language: ar
+  categories: &id014
+  - politics
+  - society
+  terms_reviewed: true
+  feeds:
+  - slug: aljazirah-1
+    url: https://www.al-jazirah.com/rss/ln.xml
+    language: ar
+    countries:
+    - SA
+    categories: *id014
+    enabled: true
+    vetting:
+      status: ok
+      items: 18
+      newest_age_hours: 14.9
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms forbid commercial copying of content without permission
+      (non-commercial clause, accepted per Ahmed''s 18 Nov decision); links must go
+      to full pages, which we do'
+  terms_note: 'Allowed: terms forbid commercial copying of content without permission
+    (non-commercial clause, accepted per Ahmed''s 18 Nov decision); links must go
+    to full pages, which we do (reviewed 18 Nov 2026)'
+- slug: alriyadh
+  name: Al Riyadh
+  name_ar: الرياض
+  website: https://www.alriyadh.com/
+  country: SA
+  language: ar
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: argaam
+  name: Argaam
+  name_ar: أرقام
+  website: https://www.argaam.com/
+  country: SA
+  language: ar
+  categories:
+  - markets
+  - companies
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: sama
+  name: Saudi Central Bank
+  name_ar: البنك المركزي السعودي
+  website: https://www.sama.gov.sa/
+  country: SA
+  language: ar
+  state_affiliated: true
+  categories:
+  - central-banks
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: gastat
+  name: General Authority for Statistics (Saudi Arabia)
+  name_ar: الهيئة العامة للإحصاء
+  website: https://www.stats.gov.sa/
+  country: SA
+  language: ar
+  state_affiliated: true
+  categories:
+  - macroeconomics
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: wam-ar
+  name: Emirates News Agency
+  name_ar: وام
+  website: https://www.wam.ae/ar
+  country: AE
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: wam-en
+  name: Emirates News Agency (English)
+  website: https://www.wam.ae/en
+  country: AE
+  language: en
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: thenational
+  name: The National
+  website: https://www.thenationalnews.com/
+  country: AE
+  language: en
+  owner_group: International Media Investments
+  categories: &id015
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: thenational-1
+    url: https://www.thenationalnews.com/arc/outboundfeeds/rss/?outputType=xml
+    language: en
+    countries:
+    - AE
+    categories: *id015
+    enabled: true
+    vetting:
+      status: ok
+      items: 100
+      newest_age_hours: 0.1
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms say personal non-commercial use only (accepted per
+      Ahmed''s 18 Nov decision); no explicit ban on feeds, linking or bots'
+  - slug: thenational-2
+    url: https://www.thenationalnews.com/arc/outboundfeeds/rss/category/business/?outputType=xml
+    language: en
+    countries:
+    - AE
+    categories: *id015
+    enabled: true
+    vetting:
+      status: ok
+      items: 39
+      newest_age_hours: 0.9
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms say personal non-commercial use only (accepted per
+      Ahmed''s 18 Nov decision); no explicit ban on feeds, linking or bots'
+  - slug: thenational-3
+    url: https://www.thenationalnews.com/arc/outboundfeeds/rss/category/news/mena/?outputType=xml
+    language: en
+    countries:
+    - AE
+    categories: *id015
+    enabled: true
+    vetting:
+      status: ok
+      items: 33
+      newest_age_hours: 1.0
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms say personal non-commercial use only (accepted per
+      Ahmed''s 18 Nov decision); no explicit ban on feeds, linking or bots'
+  terms_note: 'Allowed: terms say personal non-commercial use only (accepted per Ahmed''s
+    18 Nov decision); no explicit ban on feeds, linking or bots (reviewed 18 Nov 2026)'
+- slug: gulfnews
+  name: Gulf News
+  website: https://gulfnews.com/
+  country: AE
+  language: en
+  categories: &id016
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: gulfnews-3
+    url: https://gulfnews.com/feed
+    language: en
+    countries:
+    - AE
+    categories: *id016
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 0.2
+      with_summary_pct: 22
+    licence_note: 'Allowed: terms say non-commercial use only (accepted per Ahmed''s
+      18 Nov decision); no explicit ban on feeds, linking or bots'
+  terms_note: 'Allowed: terms say non-commercial use only (accepted per Ahmed''s 18
+    Nov decision); no explicit ban on feeds, linking or bots (reviewed 18 Nov 2026)'
+- slug: khaleejtimes
+  name: Khaleej Times
+  website: https://www.khaleejtimes.com/
+  country: AE
+  language: en
+  categories: &id017
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: khaleejtimes-1
+    url: https://www.khaleejtimes.com/api/v1/collections/top-section.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 20
+      newest_age_hours: 0.4
+      with_summary_pct: 20
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-2
+    url: https://www.khaleejtimes.com/api/v1/collections/uae.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 0.4
+      with_summary_pct: 20
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-3
+    url: https://www.khaleejtimes.com/api/v1/collections/world.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 0.4
+      with_summary_pct: 75
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-4
+    url: https://www.khaleejtimes.com/api/v1/collections/life-and-living.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 6.5
+      with_summary_pct: 10
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-5
+    url: https://www.khaleejtimes.com/api/v1/collections/business.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 2.7
+      with_summary_pct: 42
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-6
+    url: https://www.khaleejtimes.com/api/v1/collections/entertainment.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 0.3
+      with_summary_pct: 38
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-7
+    url: https://www.khaleejtimes.com/api/v1/collections/sports.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 2.8
+      with_summary_pct: 50
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-8
+    url: https://www.khaleejtimes.com/api/v1/collections/lifestyle.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 0.3
+      with_summary_pct: 38
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  - slug: khaleejtimes-9
+    url: https://www.khaleejtimes.com/api/v1/collections/long-reads.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: false
+    vetting:
+      status: stale
+      items: 40
+      newest_age_hours: 4014.2
+      with_summary_pct: 5
+  - slug: khaleejtimes-10
+    url: https://www.khaleejtimes.com/api/v1/collections/space.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: false
+    vetting:
+      status: stale
+      items: 40
+      newest_age_hours: 268.6
+      with_summary_pct: 45
+  - slug: khaleejtimes-11
+    url: https://www.khaleejtimes.com/api/v1/collections/jobs.rss
+    language: en
+    countries:
+    - AE
+    categories: *id017
+    enabled: true
+    vetting:
+      status: ok
+      items: 40
+      newest_age_hours: 54.8
+      with_summary_pct: 35
+    licence_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking,
+      bots or quoting found'
+  terms_note: 'Allowed: legal page has no usage terms; no ban on feeds, linking, bots
+    or quoting found (reviewed 18 Nov 2026)'
+- slug: albayan
+  name: Al Bayan
+  name_ar: البيان
+  website: https://www.albayan.ae/
+  country: AE
+  language: ar
+  owner_group: Dubai Media Incorporated
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: alkhaleej
+  name: Al Khaleej
+  name_ar: الخليج
+  website: https://www.alkhaleej.ae/
+  country: AE
+  language: ar
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: cbuae
+  name: Central Bank of the UAE
+  website: https://www.centralbank.ae/
+  country: AE
+  language: en
+  state_affiliated: true
+  categories:
+  - central-banks
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: youm7
+  name: Youm7
+  name_ar: اليوم السابع
+  website: https://www.youm7.com/
+  country: EG
+  language: ar
+  categories: &id018
+  - politics
+  - society
+  terms_reviewed: true
+  feeds:
+  - slug: youm7-1
+    url: https://www.youm7.com/rss/SectionRss?SectionID=65
+    language: ar
+    countries:
+    - EG
+    categories: *id018
+    enabled: true
+    vetting:
+      status: stale
+      items: 20
+      newest_age_hours: null
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; photo reuse restricted (we
+      store no images); feed dates not parsed by collector yet'
+  - slug: youm7-2
+    url: https://www.youm7.com/rss/SectionRss?SectionID=97
+    language: ar
+    countries:
+    - EG
+    categories: *id018
+    enabled: true
+    vetting:
+      status: stale
+      items: 20
+      newest_age_hours: null
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; photo reuse restricted (we
+      store no images); feed dates not parsed by collector yet'
+  - slug: youm7-3
+    url: https://www.youm7.com/rss/SectionRss?SectionID=297
+    language: ar
+    countries:
+    - EG
+    categories: *id018
+    enabled: true
+    vetting:
+      status: stale
+      items: 20
+      newest_age_hours: null
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; photo reuse restricted (we
+      store no images); feed dates not parsed by collector yet'
+  - slug: youm7-4
+    url: https://www.youm7.com/rss/SectionRss?SectionID=88
+    language: ar
+    countries:
+    - EG
+    categories: *id018
+    enabled: true
+    vetting:
+      status: stale
+      items: 20
+      newest_age_hours: null
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; photo reuse restricted (we
+      store no images); feed dates not parsed by collector yet'
+  terms_note: 'Allowed: only a privacy policy found; photo reuse restricted (we store
+    no images); feed dates not parsed by collector yet (reviewed 18 Nov 2026)'
+- slug: masrawy
+  name: Masrawy
+  name_ar: مصراوي
+  website: https://www.masrawy.com/
+  country: EG
+  language: ar
+  categories: &id019
+  - politics
+  - society
+  terms_reviewed: true
+  feeds:
+  - slug: masrawy-1
+    url: https://www.masrawy.com/rss/feed/25/%D8%A3%D8%AE%D8%A8%D8%A7%D8%B1
+    language: ar
+    countries:
+    - EG
+    categories: *id019
+    enabled: true
+    vetting:
+      status: stale
+      items: 10
+      newest_age_hours: null
+      with_summary_pct: 100
+    licence_note: 'Allowed: policy asks content be credited to its source; no ban
+      on feeds, linking, bots or quoting; feed dates not parsed by collector yet'
+  - slug: masrawy-2
+    url: https://www.masrawy.com/rss/feed/35/%D9%85%D8%B5%D8%B1
+    language: ar
+    countries:
+    - EG
+    categories: *id019
+    enabled: true
+    vetting:
+      status: stale
+      items: 10
+      newest_age_hours: null
+      with_summary_pct: 100
+    licence_note: 'Allowed: policy asks content be credited to its source; no ban
+      on feeds, linking, bots or quoting; feed dates not parsed by collector yet'
+  - slug: masrawy-3
+    url: https://www.masrawy.com/rss/feed/206/%D8%A5%D9%82%D8%AA%D8%B5%D8%A7%D8%AF
+    language: ar
+    countries:
+    - EG
+    categories: *id019
+    enabled: true
+    vetting:
+      status: stale
+      items: 10
+      newest_age_hours: null
+      with_summary_pct: 100
+    licence_note: 'Allowed: policy asks content be credited to its source; no ban
+      on feeds, linking, bots or quoting; feed dates not parsed by collector yet'
+  terms_note: 'Allowed: policy asks content be credited to its source; no ban on feeds,
+    linking, bots or quoting; feed dates not parsed by collector yet (reviewed 18
+    Nov 2026)'
+- slug: ahram-ar
+  name: Al-Ahram
+  name_ar: الأهرام
+  website: https://gate.ahram.org.eg/
+  country: EG
+  language: ar
+  owner_group: Al-Ahram Establishment
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: ahram-en
+  name: Ahram Online
+  website: https://english.ahram.org.eg/
+  country: EG
+  language: en
+  owner_group: Al-Ahram Establishment
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: almasryalyoum
+  name: Al-Masry Al-Youm
+  name_ar: المصري اليوم
+  website: https://www.almasryalyoum.com/
+  country: EG
+  language: ar
+  categories:
+  - politics
+  - society
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: enterprise
+  name: Enterprise
+  website: https://enterprise.press/
+  country: EG
+  language: en
+  categories:
+  - economy
+  - companies
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: mena
+  name: Middle East News Agency
+  name_ar: وكالة أنباء الشرق الأوسط
+  website: https://www.mena.org.eg/
+  country: EG
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: cbe
+  name: Central Bank of Egypt
+  name_ar: البنك المركزي المصري
+  website: https://www.cbe.org.eg/
+  country: EG
+  language: ar
+  state_affiliated: true
+  categories:
+  - central-banks
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: aa-ar
+  name: Anadolu Agency (Arabic)
+  name_ar: الأناضول
+  website: https://www.aa.com.tr/ar
+  country: TR
+  language: ar
+  owner_group: Anadolu Agency
+  state_affiliated: true
+  categories: &id020
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: aa-ar-1
+    url: https://www.aa.com.tr/ar/rss/default?cat=guncel
+    language: ar
+    countries:
+    - TR
+    categories: *id020
+    enabled: true
+    vetting:
+      status: ok
+      items: 27
+      newest_age_hours: 0.1
+      with_summary_pct: 93
+    licence_note: 'Allowed: terms page not found (returns ''Content not found'');
+      publishes public RSS. Note: subscription news agency'
+  terms_note: 'Allowed: terms page not found (returns ''Content not found''); publishes
+    public RSS. Note: subscription news agency (reviewed 18 Nov 2026)'
+- slug: aa-en
+  name: Anadolu Agency (English)
+  website: https://www.aa.com.tr/en
+  country: TR
+  language: en
+  owner_group: Anadolu Agency
+  state_affiliated: true
+  categories: &id021
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: aa-en-1
+    url: https://www.aa.com.tr/en/rss/default?cat=guncel
+    language: en
+    countries:
+    - TR
+    categories: *id021
+    enabled: true
+    vetting:
+      status: ok
+      items: 30
+      newest_age_hours: 0.1
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms page not found (returns ''Content not found'');
+      publishes public RSS. Note: subscription news agency'
+  - slug: aa-en-2
+    url: https://www.aa.com.tr/en/rss/default?cat=middle-east
+    language: en
+    countries:
+    - TR
+    categories: *id021
+    enabled: true
+    vetting:
+      status: ok
+      items: 30
+      newest_age_hours: 0.1
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms page not found (returns ''Content not found'');
+      publishes public RSS. Note: subscription news agency'
+  - slug: aa-en-3
+    url: https://www.aa.com.tr/en/rss/default?cat=economy
+    language: en
+    countries:
+    - TR
+    categories: *id021
+    enabled: true
+    vetting:
+      status: ok
+      items: 30
+      newest_age_hours: 0.2
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms page not found (returns ''Content not found'');
+      publishes public RSS. Note: subscription news agency'
+  terms_note: 'Allowed: terms page not found (returns ''Content not found''); publishes
+    public RSS. Note: subscription news agency (reviewed 18 Nov 2026)'
+- slug: aa-tr
+  name: Anadolu Ajansı
+  website: https://www.aa.com.tr/tr
+  country: TR
+  language: tr
+  owner_group: Anadolu Agency
+  state_affiliated: true
+  categories: &id022
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: aa-tr-1
+    url: https://www.aa.com.tr/tr/rss/default?cat=guncel
+    language: tr
+    countries:
+    - TR
+    categories: *id022
+    enabled: true
+    vetting:
+      status: ok
+      items: 30
+      newest_age_hours: 0.1
+      with_summary_pct: 93
+    licence_note: 'Allowed: terms page not found (returns ''Content not found'');
+      publishes public RSS. Note: subscription news agency'
+  - slug: aa-tr-2
+    url: https://www.aa.com.tr/tr/rss/default?cat=ekonomi
+    language: tr
+    countries:
+    - TR
+    categories: *id022
+    enabled: true
+    vetting:
+      status: ok
+      items: 30
+      newest_age_hours: 1.6
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms page not found (returns ''Content not found'');
+      publishes public RSS. Note: subscription news agency'
+  terms_note: 'Allowed: terms page not found (returns ''Content not found''); publishes
+    public RSS. Note: subscription news agency (reviewed 18 Nov 2026)'
+- slug: trthaber
+  name: TRT Haber
+  website: https://www.trthaber.com/
+  country: TR
+  language: tr
+  owner_group: TRT
+  state_affiliated: true
+  categories:
+  - politics
+  terms_reviewed: true
+  feeds: []
+  terms_note: 'Excluded: terms 1.2 forbid quoting any content, in part or whole (reviewed
+    18 Nov 2026)'
+- slug: trtworld
+  name: TRT World
+  website: https://www.trtworld.com/
+  country: TR
+  language: en
+  owner_group: TRT
+  state_affiliated: true
+  categories: &id023
+  - politics
+  terms_reviewed: true
+  feeds:
+  - slug: trtworld-1
+    url: https://www.trtworld.com/feed/rss.xml
+    language: en
+    countries:
+    - TR
+    categories: *id023
+    enabled: false
+    vetting:
+      status: ok
+      items: 100
+      newest_age_hours: 0.3
+      with_summary_pct: 100
+  terms_note: 'Excluded: terms 1.4 forbid quoting or reproducing without the owner''s
+    consent (reviewed 18 Nov 2026)'
+- slug: dailysabah
+  name: Daily Sabah
+  website: https://www.dailysabah.com/
+  country: TR
+  language: en
+  categories: &id024
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: dailysabah-1
+    url: https://www.dailysabah.com/rss/all.xml
+    language: tr
+    countries:
+    - TR
+    categories: *id024
+    enabled: true
+    vetting:
+      status: ok
+      items: 45
+      newest_age_hours: 1.5
+      with_summary_pct: 100
+    licence_note: 'Allowed: no terms page found; publishes a public RSS directory'
+  - slug: dailysabah-2
+    url: https://www.dailysabah.com/rss/turkiye
+    language: en
+    countries:
+    - TR
+    categories: *id024
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 6.5
+      with_summary_pct: 100
+    licence_note: 'Allowed: no terms page found; publishes a public RSS directory'
+  - slug: dailysabah-3
+    url: https://www.dailysabah.com/rss/politics
+    language: tr
+    countries:
+    - TR
+    categories: *id024
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 1.9
+      with_summary_pct: 100
+    licence_note: 'Allowed: no terms page found; publishes a public RSS directory'
+  - slug: dailysabah-4
+    url: https://www.dailysabah.com/rss/business
+    language: tr
+    countries:
+    - TR
+    categories: *id024
+    enabled: true
+    vetting:
+      status: ok
+      items: 36
+      newest_age_hours: 1.5
+      with_summary_pct: 100
+    licence_note: 'Allowed: no terms page found; publishes a public RSS directory'
+  - slug: dailysabah-5
+    url: https://www.dailysabah.com/rss/world/mid-east
+    language: en
+    countries:
+    - TR
+    categories: *id024
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 3.5
+      with_summary_pct: 100
+    licence_note: 'Allowed: no terms page found; publishes a public RSS directory'
+  terms_note: 'Allowed: no terms page found; publishes a public RSS directory (reviewed
+    18 Nov 2026)'
+- slug: hurriyetdailynews
+  name: Hürriyet Daily News
+  website: https://www.hurriyetdailynews.com/
+  country: TR
+  language: en
+  categories: &id025
+  - politics
+  - economy
+  terms_reviewed: true
+  feeds:
+  - slug: hurriyetdailynews-1
+    url: https://www.hurriyetdailynews.com/rss/turkey
+    language: tr
+    countries:
+    - TR
+    categories: *id025
+    enabled: true
+    vetting:
+      status: ok
+      items: 100
+      newest_age_hours: 1.8
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: hurriyetdailynews-2
+    url: https://www.hurriyetdailynews.com/rss/economy
+    language: tr
+    countries:
+    - TR
+    categories: *id025
+    enabled: true
+    vetting:
+      status: ok
+      items: 100
+      newest_age_hours: 4.0
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; no ban on feeds, linking,
+      bots or quoting'
+  - slug: hurriyetdailynews-3
+    url: https://www.hurriyetdailynews.com/rss/world
+    language: en
+    countries:
+    - TR
+    categories: *id025
+    enabled: true
+    vetting:
+      status: ok
+      items: 100
+      newest_age_hours: 1.7
+      with_summary_pct: 100
+    licence_note: 'Allowed: only a privacy policy found; no ban on feeds, linking,
+      bots or quoting'
+  terms_note: 'Allowed: only a privacy policy found; no ban on feeds, linking, bots
+    or quoting (reviewed 18 Nov 2026)'
+- slug: bloomberght
+  name: Bloomberg HT
+  website: https://www.bloomberght.com/
+  country: TR
+  language: tr
+  categories: &id026
+  - economy
+  - markets
+  terms_reviewed: true
+  feeds:
+  - slug: bloomberght-1
+    url: https://www.bloomberght.com/rss
+    language: tr
+    countries:
+    - TR
+    categories: *id026
+    enabled: false
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 0.9
+      with_summary_pct: 100
+  terms_note: 'Excluded: terms ban bulk collection by bots/crawlers without written
+    permission (reviewed 18 Nov 2026)'
+- slug: tcmb
+  name: Central Bank of the Republic of Türkiye
+  website: https://www.tcmb.gov.tr/
+  country: TR
+  language: tr
+  state_affiliated: true
+  categories:
+  - central-banks
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: qna
+  name: Qatar News Agency
+  name_ar: قنا
+  website: https://www.qna.org.qa/
+  country: QA
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: gulftimes
+  name: Gulf Times
+  website: https://www.gulf-times.com/
+  country: QA
+  language: en
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: peninsula
+  name: The Peninsula
+  website: https://thepeninsulaqatar.net/
+  country: QA
+  language: en
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: kuna
+  name: Kuwait News Agency
+  name_ar: كونا
+  website: https://www.kuna.net.kw/
+  country: KW
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: alqabas
+  name: Al-Qabas
+  name_ar: القبس
+  website: https://www.alqabas.com/
+  country: KW
+  language: ar
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: ona
+  name: Oman News Agency
+  name_ar: وكالة الأنباء العمانية
+  website: https://omannews.gov.om/
+  country: OM
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: petra
+  name: Jordan News Agency (Petra)
+  name_ar: بترا
+  website: https://petra.gov.jo/
+  country: JO
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: bna
+  name: Bahrain News Agency
+  name_ar: بنا
+  website: https://www.bna.bh/
+  country: BH
+  language: ar
+  state_affiliated: true
+  categories:
+  - politics
+  - economy
+  terms_reviewed: false
+  feeds: []
+  terms_note: 'Not enabled: no working feed found in vetting (18 Nov 2026) (reviewed
+    18 Nov 2026)'
+- slug: annahar
+  name: Annahar
+  name_ar: النهار
+  website: https://www.annahar.com/
+  country: LB
+  language: ar
+  categories: &id027
+  - politics
+  terms_reviewed: true
+  feeds:
+  - slug: annahar-1
+    url: https://www.annahar.com/rss
+    language: ar
+    countries:
+    - LB
+    categories: *id027
+    enabled: true
+    vetting:
+      status: ok
+      items: 50
+      newest_age_hours: 0.0
+      with_summary_pct: 98
+    licence_note: 'Allowed: quoting permitted with credit and a link to the source
+      page; commercial use asks to contact them (accepted per Ahmed''s 18 Nov decision)'
+  terms_note: 'Allowed: quoting permitted with credit and a link to the source page;
+    commercial use asks to contact them (accepted per Ahmed''s 18 Nov decision) (reviewed
+    18 Nov 2026)'
+- slug: hespress
+  name: Hespress
+  name_ar: هسبريس
+  website: https://www.hespress.com/
+  country: MA
+  language: ar
+  categories: &id028
+  - politics
+  - society
+  terms_reviewed: true
+  feeds:
+  - slug: hespress-1
+    url: https://www.hespress.com/rss
+    language: ar
+    countries:
+    - MA
+    categories: *id028
+    enabled: true
+    vetting:
+      status: ok
+      items: 12
+      newest_age_hours: 0.6
+      with_summary_pct: 100
+    licence_note: 'Allowed: terms permit republishing with a link to the site and
+      no distortion of content'
+  terms_note: 'Allowed: terms permit republishing with a link to the site and no distortion
+    of content (reviewed 18 Nov 2026)'
