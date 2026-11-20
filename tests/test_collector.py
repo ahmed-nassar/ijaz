@@ -199,3 +199,34 @@ def test_page_check_stops_at_head(settings, sessions, web):
     header = run(check_page(fetcher, "https://agency.example/long", settings.page_check_max_bytes))
     assert header.status == "ok" and header.canonical
     assert sent["bytes"] < 10_000  # stopped long before the 1.7 MB body
+
+
+def test_rounds_poll_sources_due_before_next_round_then_release_connections(settings, sessions, web):
+    from datetime import datetime, timedelta, timezone
+
+    from collector.scheduler import run_rounds
+
+    agency_web(web)
+    soon = add_source(sessions, "agency-ar", "https://agency.example/rss", "agency")
+    later = add_source(sessions, "agency-late", "https://agency.example/late", "agency")
+    now = datetime.now(timezone.utc)
+    with sessions() as s:
+        s.get(Source, soon).next_poll_at = now + timedelta(minutes=10)  # before the next round
+        s.get(Source, later).next_poll_at = now + timedelta(minutes=30)  # after it
+        s.commit()
+    released = []
+
+    run(run_rounds(make_collector(settings, sessions, web), 20 * 60, lambda: released.append(1), rounds=1))
+
+    assert "https://agency.example/rss" in web.urls()
+    assert "https://agency.example/late" not in web.urls()
+    assert released == [1]
+
+
+def test_round_minutes_setting(monkeypatch):
+    from collector.config import get_settings
+
+    monkeypatch.delenv("COLLECTOR_ROUND_MINUTES", raising=False)
+    assert get_settings().round_minutes == 0
+    monkeypatch.setenv("COLLECTOR_ROUND_MINUTES", "20")
+    assert get_settings().round_minutes == 20

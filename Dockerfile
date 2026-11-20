@@ -1,6 +1,5 @@
-# Explicit image so Railway installs the dependencies from pyproject.toml
-# instead of relying on builder auto-detection.
-FROM python:3.14-slim
+# Python 3.14 on Debian 13 (trixie). Fly.io builds this image (see fly.toml).
+FROM python:3.14-slim-trixie
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -16,5 +15,5 @@ RUN pip install .
 
 COPY sources ./sources
 
-# Railway's startCommand (railway.json) overrides this; kept for local `docker run`.
+# The worker's start command on Fly.io and for local `docker run`.
 CMD ["collector", "-v", "run"]

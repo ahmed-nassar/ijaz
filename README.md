@@ -41,6 +41,24 @@ collector run                      # poll continuously
 collector status --hours 24        # per-feed report, article counts, open alerts
 ```
 
+## Deploying (Fly.io + Neon)
+
+The collector runs on Fly.io as one always-on worker machine (`fly.toml`), with Postgres 18 on Neon. Each deploy first runs `collector init-db && collector load-sources sources/sources.yaml` as the release command, then starts `collector -v run`.
+
+```
+fly apps create ijaz-collector
+fly secrets set -a ijaz-collector \
+  DATABASE_URL='postgresql://USER:PASSWORD@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require' \
+  COLLECTOR_USER_AGENT='SiteName/0.1 (+https://site.example/about-our-crawler)'
+fly deploy
+fly scale count 1 -a ijaz-collector   # exactly one worker
+fly logs -a ijaz-collector
+```
+
+Use Neon's direct connection string (host without `-pooler`).
+
+`fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the worker polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
+
 ## Tests
 
 ```
