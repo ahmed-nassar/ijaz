@@ -1,0 +1,24 @@
+# Fly.io config for the news collector: one always-on background worker.
+# It has no HTTP server, so there is no [http_service], no health check and no
+# auto-stop. Secrets (set with `fly secrets set`, never in this file):
+#   DATABASE_URL          Neon connection string (direct endpoint, not -pooler)
+#   COLLECTOR_USER_AGENT  e.g. "SiteName/0.1 (+https://site.example/about-our-crawler)"
+
+app = "ijaz-collector"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[deploy]
+  # Runs once per deploy in a temporary machine, before the worker is replaced.
+  # Both steps are idempotent: tables are created if missing, sources are upserted.
+  release_command = "sh -c 'collector init-db && collector load-sources sources/sources.yaml'"
+  strategy = "immediate"
+
+[[restart]]
+  policy = "always"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

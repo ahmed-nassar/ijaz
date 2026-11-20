@@ -41,6 +41,22 @@ collector run                      # poll continuously
 collector status --hours 24        # per-feed report, article counts, open alerts
 ```
 
+## Deploying (Fly.io + Neon)
+
+The collector runs on Fly.io as one always-on worker machine (`fly.toml`), with Postgres 18 on Neon. Each deploy first runs `collector init-db && collector load-sources sources/sources.yaml` as the release command, then starts `collector -v run`.
+
+```
+fly apps create ijaz-collector
+fly secrets set -a ijaz-collector \
+  DATABASE_URL='postgresql://USER:PASSWORD@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require' \
+  COLLECTOR_USER_AGENT='SiteName/0.1 (+https://site.example/about-our-crawler)'
+fly deploy
+fly scale count 1 -a ijaz-collector   # exactly one worker
+fly logs -a ijaz-collector
+```
+
+Use Neon's direct connection string (host without `-pooler`): the worker keeps a few long-lived connections and needs no pooler.
+
 ## Tests
 
 ```

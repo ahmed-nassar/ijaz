@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 
 def _database_url() -> str:
-    """COLLECTOR_DATABASE_URL, else DATABASE_URL (what Railway and Heroku-style hosts set).
+    """COLLECTOR_DATABASE_URL, else DATABASE_URL (what Fly.io secrets and Heroku-style hosts use).
 
     Hosts hand out ``postgres://`` or ``postgresql://`` URLs; SQLAlchemy reads those as
     psycopg2, which is not installed, so they are switched to the psycopg (v3) driver.
