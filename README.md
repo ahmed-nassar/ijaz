@@ -23,7 +23,7 @@ Scheduling (`scheduler.py`) polls each feed every 5 to 30 minutes depending on h
 
 ## Using it
 
-Requires Python 3.12+ and PostgreSQL 16.
+Requires Python 3.14+ and PostgreSQL 18.
 
 ```
 python -m venv .venv && . .venv/bin/activate

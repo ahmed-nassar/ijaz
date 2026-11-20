@@ -1,6 +1,6 @@
 # Explicit image so Railway installs the dependencies from pyproject.toml
 # instead of relying on builder auto-detection.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
