@@ -6,6 +6,21 @@ import os
 from dataclasses import dataclass, field
 
 
+def _database_url() -> str:
+    """COLLECTOR_DATABASE_URL, else DATABASE_URL (what Railway and Heroku-style hosts set).
+
+    Hosts hand out ``postgres://`` or ``postgresql://`` URLs; SQLAlchemy reads those as
+    psycopg2, which is not installed, so they are switched to the psycopg (v3) driver.
+    """
+    url = os.environ.get("COLLECTOR_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    if not url:
+        return "postgresql+psycopg://localhost/collector"
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
 def _int(name: str, default: int) -> int:
     value = os.environ.get(name)
     return int(value) if value else default
@@ -13,11 +28,7 @@ def _int(name: str, default: int) -> int:
 
 @dataclass(frozen=True)
 class Settings:
-    database_url: str = field(
-        default_factory=lambda: os.environ.get(
-            "COLLECTOR_DATABASE_URL", "postgresql+psycopg://localhost/collector"
-        )
-    )
+    database_url: str = field(default_factory=_database_url)
     # Honest identification: publishers must be able to see who we are and reach us.
     user_agent: str = field(
         default_factory=lambda: os.environ.get(

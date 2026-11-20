@@ -71,3 +71,15 @@ def test_vet_discovers_feed_from_homepage_and_drafts_disabled(settings, sessions
     draft = draft_source_list([pub], [report])
     feed_entry = draft["publishers"][0]["feeds"][0]
     assert feed_entry["enabled"] is False and feed_entry["url"].endswith("/feeds/all.xml")
+
+
+def test_database_url_from_host_env(monkeypatch):
+    from collector.config import get_settings
+
+    monkeypatch.delenv("COLLECTOR_DATABASE_URL", raising=False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@db.railway.internal:5432/railway")
+    assert get_settings().database_url == "postgresql+psycopg://u:p@db.railway.internal:5432/railway"
+    monkeypatch.setenv("DATABASE_URL", "postgres://u:p@h/db")
+    assert get_settings().database_url == "postgresql+psycopg://u:p@h/db"
+    monkeypatch.setenv("COLLECTOR_DATABASE_URL", "sqlite:///x.db")
+    assert get_settings().database_url == "sqlite:///x.db"
