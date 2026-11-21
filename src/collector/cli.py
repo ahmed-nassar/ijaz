@@ -17,7 +17,7 @@ from .db import init_db, make_engine, session_factory
 from .http import Fetcher
 from .ingest import Collector
 from .models import Alert, Article, FetchLog, Publisher, Source
-from .registry import load_source_list, read_source_list
+from .registry import load_source_list, read_source_list, relabel_languages
 from .robots import RobotsChecker
 from .scheduler import poll_once, run_forever, run_rounds
 from .vet import draft_source_list, vet_all, write_yaml
@@ -68,7 +68,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "load-sources":
         with sessions() as session:
             pubs, active = load_source_list(session, args.path)
-        print(f"loaded {pubs} publishers, {active} active feeds")
+            relabelled = relabel_languages(session)
+        print(f"loaded {pubs} publishers, {active} active feeds; {relabelled} article languages corrected")
         return 0
     if args.command == "status":
         return _status(sessions, args.hours)

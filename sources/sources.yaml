@@ -1373,7 +1373,7 @@ publishers:
   feeds:
   - slug: hurriyetdailynews-1
     url: https://www.hurriyetdailynews.com/rss/turkey
-    language: tr
+    language: en
     countries:
     - TR
     categories: *id025
@@ -1387,7 +1387,7 @@ publishers:
       bots or quoting'
   - slug: hurriyetdailynews-2
     url: https://www.hurriyetdailynews.com/rss/economy
-    language: tr
+    language: en
     countries:
     - TR
     categories: *id025

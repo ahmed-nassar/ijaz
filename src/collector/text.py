@@ -98,25 +98,48 @@ def hamming(a: int, b: int) -> int:
     return bin((a ^ b) & ((1 << 64) - 1)).count("1")
 
 
-def detect_language(text: str, declared: str | None = None) -> str:
-    """Script-based check of the feed's declared language.
+_WORD = re.compile(r"[^\W\d_]+(?:['’][^\W\d_]+)?", re.UNICODE)
+_TURKISH_LETTERS = set("ğĞışŞİ")
+# Short words that are common in English headlines and are not Turkish words.
+_ENGLISH_WORDS = frozenset(
+    "the of to and for with from after over says is are was were as at by on in into amid "
+    "against new its his her their who what how why will has have be not more than".split()
+)
+# Short Turkish words with no Turkish-specific letters.
+_TURKISH_WORDS = frozenset("ve bir ile bu da de gibi olarak sonra daha çok için".split())
 
-    Arabic script decides Arabic (or Persian/Urdu are not expected in our sources);
-    otherwise Turkish-specific letters decide Turkish; otherwise the declared language
-    stands, defaulting to English.
+
+def detect_language(text: str, declared: str | None = None) -> str:
+    """Check the language a feed or our source list declares against the text.
+
+    Arabic script decides Arabic. Otherwise, among English and Turkish (the Latin-script
+    languages we collect), the words decide: English function words such as "the",
+    "of" and "to" mean English; Turkish-specific letters (ğ ı ş İ) and words such as
+    "ve" and "için" mean Turkish. When English is declared, it takes clearly more
+    Turkish than English words to overrule it, since English headlines often name
+    Turkish people and places ("Erdoğan says..."). When the text gives no clear sign,
+    the declared language stands, defaulting to English.
     """
     declared = (declared or "").split("-")[0].lower() or None
     letters = [c for c in text if c.isalpha()]
     if not letters:
         return declared or "und"
-    arabic = sum(1 for c in letters if "؀" <= c <= "ۿ" or "ݐ" <= c <= "ݿ")
+    arabic = sum(1 for c in letters if "\u0600" <= c <= "\u06ff" or "\u0750" <= c <= "\u077f")
     if arabic / len(letters) > 0.5:
         return "ar"
     if declared == "ar":
         # Declared Arabic but written in Latin script: trust the text.
         declared = None
-    if any(c in "ğĞışŞİ" for c in text):
-        return "tr"
-    if declared:
+    if declared not in (None, "en", "tr"):
         return declared
-    return "en"
+    words = [w.lower() for w in _WORD.findall(text)]
+    english = sum(1 for w in words if w in _ENGLISH_WORDS)
+    turkish = sum(1 for w in words if w in _TURKISH_WORDS or any(c in _TURKISH_LETTERS for c in w))
+    if declared == "en":
+        # Our source list says English: a name or two with Turkish letters is not enough.
+        return "tr" if turkish >= max(2, english + 2) else "en"
+    if english >= 2 and english >= turkish:
+        return "en"
+    if turkish:
+        return "tr"
+    return declared or "en"

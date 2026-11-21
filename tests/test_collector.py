@@ -310,3 +310,25 @@ def test_watchdog_starts_a_stopped_worker_after_two_empty_checks():
     assert started == ["/v1/apps/ijaz/machines/w1/start"]
     machines[0]["state"] = "started"
     assert check_once(client, "ijaz", 0) == 0 and len(started) == 1  # one is running: nothing to do
+
+
+def test_relabel_corrects_stored_languages_and_is_idempotent(sessions):
+    from datetime import datetime, timezone
+
+    from collector.registry import relabel_languages
+    from collector.urls import url_hash
+
+    source_id = add_source(sessions, "hdn", "https://hdn.example/rss", "hdn", language="en")
+    now = datetime.now(timezone.utc)
+    with sessions() as s:
+        pub_id = s.get(Source, source_id).publisher_id
+        for i, (title, stored) in enumerate([("Erdoğan says Türkiye entering new era on world stage", "tr"),
+                                              ("Fidan holds talks with US envoy", "en")]):
+            url = f"https://hdn.example/{i}"
+            s.add(Article(source_id=source_id, publisher_id=pub_id, feed_url=url, feed_url_hash=url_hash(url),
+                          canonical_url=url, canonical_url_hash=url_hash(url), title=title, language=stored,
+                          published_at=now, fetched_at=now, fingerprint=0))
+        s.commit()
+        assert relabel_languages(s) == 1
+        assert relabel_languages(s) == 0
+        assert set(s.scalars(select(Article.language))) == {"en"}
