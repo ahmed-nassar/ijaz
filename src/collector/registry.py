@@ -9,7 +9,8 @@ import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .models import Publisher, Source
+from .models import Article, Publisher, Source
+from .text import detect_language
 
 PUBLISHER_FIELDS = ("name", "name_ar", "website", "country", "owner_group", "state_affiliated", "authority", "paywall")
 
@@ -74,3 +75,25 @@ def load_source_list(session: Session, path: str | Path) -> tuple[int, int]:
                 active += 1
     session.commit()
     return len(publishers), active
+
+
+def relabel_languages(session: Session, batch: int = 1000) -> int:
+    """Check every stored article's language again against its feed's language in the
+    source list, and fix the ones that differ. Returns how many changed.
+
+    Safe to run on every deploy: it changes nothing once labels agree.
+    """
+    hints = dict(session.execute(select(Source.id, Source.language)).all())
+    changed, last_id = 0, 0
+    while True:
+        rows = session.scalars(select(Article).where(Article.id > last_id).order_by(Article.id).limit(batch)).all()
+        if not rows:
+            break
+        for article in rows:
+            language = detect_language(f"{article.title} {article.excerpt or ''}", hints.get(article.source_id))
+            if language != article.language:
+                article.language = language
+                changed += 1
+        last_id = rows[-1].id
+        session.commit()
+    return changed

@@ -33,3 +33,17 @@ def test_language_detection():
     assert detect_language("Saudi Arabia unveils package", "ar") == "en"
     assert detect_language("Türkiye'de enflasyon düştü, ışık", None) == "tr"
     assert detect_language("Le Maroc annonce", "fr-FR") == "fr"
+
+
+def test_english_headlines_with_turkish_names_stay_english():
+    # Hürriyet Daily News and Daily Sabah write in English about Turkish people and places.
+    assert detect_language("Erdoğan hails Kızılelma drone as it enters service", "en") == "en"
+    assert detect_language("Kurtulmuş meets İYİ Party leader over anti-terror body", "en") == "en"
+    # A feed that wrongly declares Turkish is overruled by clearly English text.
+    assert detect_language("Türkiye to submit visa liberalization draft to parliament", "tr") == "en"
+    # Turkish text stays Turkish, even with a stray English word or a wrong declaration.
+    assert detect_language("Amasya'da midibüsün devrildiği kazada 14 kişi yaralandı", "en") == "tr"
+    assert detect_language("Fed ve yapay zeka kaynaklı satış dalgası değerli metalleri vurdu", None) == "tr"
+    # No clear sign either way: the declared language stands.
+    assert detect_language("Eyüpspor, Trabzonspor'a konuk olacak", "tr") == "tr"
+    assert detect_language("Fidan, EU envoy discuss Cyprus issue in Ankara", "en") == "en"

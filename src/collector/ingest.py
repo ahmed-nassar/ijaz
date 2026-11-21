@@ -112,7 +112,7 @@ class Collector:
         if image:
             image = normalize_url(image, base=canonical)
 
-        language = detect_language(f"{item.title} {excerpt or ''}", feed_language or language_hint)
+        language = detect_language(f"{item.title} {excerpt or ''}", language_hint or feed_language)
         fingerprint = simhash(f"{item.title} {excerpt or ''}")
 
         with self.sessions() as session:
