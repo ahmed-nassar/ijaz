@@ -259,3 +259,54 @@ def test_standby_worker_polls_nothing_and_skips_the_story_step(settings, session
     run(run_rounds(make_collector(settings, sessions, web), 20 * 60, lambda: released.append(1), rounds=1,
                    after_round=lambda: steps.append(1), claim=lambda: True))
     assert "https://agency.example/rss" in web.urls() and steps == [1]
+
+
+def test_standby_stops_only_once_the_main_worker_renews_its_lease(settings, sessions, web):
+    from datetime import datetime, timedelta, timezone
+
+    from collector.lease import StandbyCheck, claim
+
+    t = datetime.now(timezone.utc)
+    check = StandbyCheck(sessions, "rounds", "b")
+    assert not check()  # no lease yet
+    assert claim(sessions, "rounds", "a", 2460, now=t)
+    assert not check()  # first look at a's lease
+    assert not check()  # a has not renewed: maybe dead, keep standing by
+    assert claim(sessions, "rounds", "a", 2460, now=t + timedelta(minutes=20))
+    assert check()  # a renewed: alive, the standby can stop
+
+
+def test_standby_round_returns_when_it_can_stop(settings, sessions, web):
+    from collector.scheduler import run_rounds
+
+    released = []
+    # rounds=None would loop forever unless the standby stops itself
+    run(run_rounds(make_collector(settings, sessions, web), 0, lambda: released.append(1),
+                   claim=lambda: False, standby_can_stop=lambda: True))
+    assert web.urls() == [] and released == [1]
+
+
+def test_watchdog_starts_a_stopped_worker_after_two_empty_checks():
+    import httpx
+
+    from collector.watchdog import check_once
+
+    machines = [
+        {"id": "w1", "state": "stopped", "config": {"metadata": {"fly_process_group": "worker"}}},
+        {"id": "w2", "state": "stopped", "config": {"metadata": {"fly_process_group": "worker"}}},
+        {"id": "web1", "state": "started", "config": {"metadata": {"fly_process_group": "web"}}},
+    ]
+    started = []
+
+    def handler(request):
+        if request.method == "POST":
+            started.append(request.url.path)
+            return httpx.Response(200, json={"ok": True})
+        return httpx.Response(200, json=machines)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    assert check_once(client, "ijaz", 0) == 1 and started == []  # first miss: wait
+    assert check_once(client, "ijaz", 1) == 0
+    assert started == ["/v1/apps/ijaz/machines/w1/start"]
+    machines[0]["state"] = "started"
+    assert check_once(client, "ijaz", 0) == 0 and len(started) == 1  # one is running: nothing to do

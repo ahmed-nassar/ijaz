@@ -5,15 +5,18 @@
 #   web     the website and its read API. Two machines: one always stays on, the
 #           second starts when traffic needs it and stops again when it is quiet.
 #   worker  polls the feeds, then runs the story step (grouping, headlines, ranking,
-#           homepage snapshot); see README. One machine, always on, no web traffic.
-#           It restarts on its own if it crashes. The database lease still prevents
-#           double polling if a second worker is ever added.
-# Machine counts: fly scale count web=2 worker=1 -a ijaz (deploys keep them).
+#           homepage snapshot); see README. No web traffic. Two machines, but only
+#           one runs: the main worker holds a lease in the database and renews it
+#           each round; the standby stops itself once it sees that. If no worker is
+#           running, the web machine starts the stopped one (collector watch-workers).
+# Machine counts: fly scale count web=2 worker=2 -a ijaz (deploys keep them).
 #
 # Secrets (set with `fly secrets set -a ijaz`, never in this file):
 #   DATABASE_URL          Neon connection string (direct endpoint, not -pooler)
 #   COLLECTOR_USER_AGENT  e.g. "SiteName/0.1 (+https://site.example/about-our-crawler)"
 #   IJAZ_OPENROUTER_KEY   OpenRouter key for the story work (spec section 15)
+#   FLY_MACHINES_TOKEN    lets the web machine start a stopped worker:
+#                         fly tokens create deploy -a ijaz
 
 app = "ijaz"
 primary_region = "fra"
@@ -29,6 +32,9 @@ primary_region = "fra"
   # Worker only: poll in 20-minute rounds so Neon's compute can scale to zero
   # between them. The website ignores it.
   COLLECTOR_ROUND_MINUTES = "20"
+  # Worker only: a standby exits once the main worker is renewing its lease, so its
+  # machine stays stopped while idle.
+  COLLECTOR_STANDBY_STOPS = "1"
 
 [deploy]
   # Runs once per deploy in a temporary machine, before any machine is replaced.
@@ -48,7 +54,8 @@ primary_region = "fra"
     hard_limit = 200
 
 [[restart]]
-  policy = "always"
+  # Restart a crashed worker, but leave a standby that exited cleanly stopped.
+  policy = "on-failure"
   processes = ["worker"]
 
 [[vm]]

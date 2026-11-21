@@ -52,3 +52,25 @@ def holder(sessions: sessionmaker[Session], name: str) -> tuple[str, datetime] |
     with sessions() as session:
         lease = session.get(WorkerLease, name)
         return (lease.holder, _utc(lease.expires_at)) if lease else None
+
+
+class StandbyCheck:
+    """For a standby worker: True once another holder has renewed the lease while this
+    one watched, meaning the main worker is alive and the standby can stop itself.
+
+    A lease that is held but never renewed (its holder died) keeps the standby running,
+    so it takes the lease over when it expires.
+    """
+
+    def __init__(self, sessions: sessionmaker[Session], name: str, me: str) -> None:
+        self.sessions, self.name, self.me = sessions, name, me
+        self.seen: datetime | None = None
+
+    def __call__(self) -> bool:
+        current = holder(self.sessions, self.name)
+        if current is None or current[0] == self.me:
+            self.seen = None
+            return False
+        renewed = self.seen is not None and current[1] != self.seen
+        self.seen = current[1]
+        return renewed

@@ -35,6 +35,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--source", action="append", help="source slug; repeatable")
     p.add_argument("--no-page-check", action="store_true")
     sub.add_parser("run", help="poll continuously")
+    p = sub.add_parser("watch-workers", help="start a stopped worker machine when none is running (Fly)")
+    p.add_argument("--every", type=int, default=300, help="seconds between checks")
     p = sub.add_parser("status", help="per-source report for the last N hours")
     p.add_argument("--hours", type=int, default=24)
     p = sub.add_parser("vet", help="find and test feeds for candidate publishers")
@@ -51,6 +53,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
+    if args.command == "watch-workers":
+        from .watchdog import watch
+
+        return watch(args.every)
     settings = get_settings()
     engine = make_engine(args.db or settings.database_url)
     sessions = session_factory(engine)
@@ -118,7 +124,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "run":
         if settings.round_minutes > 0:
-            from .lease import claim, worker_id
+            from .lease import StandbyCheck, claim, worker_id
 
             me, seconds = worker_id(), settings.round_minutes * 60
             # The lease outlasts two rounds, so a long story step never lets the standby
@@ -126,7 +132,8 @@ def main(argv: list[str] | None = None) -> int:
             asyncio.run(with_fetcher(lambda f: run_rounds(
                 Collector(settings, sessions, f), seconds, engine.dispose,
                 after_round=_story_step(sessions),
-                claim=lambda: claim(sessions, "rounds", me, 2 * seconds + 60))))
+                claim=lambda: claim(sessions, "rounds", me, 2 * seconds + 60),
+                standby_can_stop=StandbyCheck(sessions, "rounds", me) if settings.standby_stops else None)))
         else:
             asyncio.run(with_fetcher(lambda f: run_forever(Collector(settings, sessions, f))))
         return 0

@@ -47,6 +47,7 @@ async def run_rounds(
     rounds: int | None = None,
     after_round: Callable[[], None] | None = None,
     claim: Callable[[], bool] | None = None,
+    standby_can_stop: Callable[[], bool] | None = None,
 ) -> None:
     """Poll in rounds, then leave the database alone until the next round.
 
@@ -59,6 +60,10 @@ async def run_rounds(
 
     ``claim`` (the worker lease) is asked at the start of each round; when it says no,
     another worker is doing the work and this one stands by until the next round.
+
+    ``standby_can_stop`` is asked on each standby round; when it says yes (the other
+    worker is alive and renewing the lease), this function returns so the process can
+    exit and its machine stay stopped.
     """
     done = 0
     while rounds is None or done < rounds:
@@ -68,6 +73,9 @@ async def run_rounds(
             if claim is not None:
                 leading = claim()
             if not leading:
+                if standby_can_stop is not None and standby_can_stop():
+                    log.info("standby: the other worker is renewing its lease; stopping")
+                    return
                 log.info("standby: another worker holds this round")
             else:
                 reports = await poll_once(collector, horizon_seconds=round_seconds)
