@@ -1,14 +1,14 @@
 # Fly.io config for the whole project: one app, `ijaz`, at https://ijaz.fly.dev
 # Deploy from the repository root with:  fly deploy
 #
-# Process groups, two machines each (all from the same image, see Dockerfile):
-#   web     the website and its read API. Stops when nobody has visited for a few
-#           minutes and starts on the next visit, so it costs nothing while idle.
+# Process groups (all from the same image, see Dockerfile):
+#   web     the website and its read API. Two machines: one always stays on, the
+#           second starts when traffic needs it and stops again when it is quiet.
 #   worker  polls the feeds, then runs the story step (grouping, headlines, ranking,
-#           homepage snapshot); see README. Always on, no web traffic. Of two workers,
-#           one holds a lease in the database and does each round; the other stands by
-#           and takes over if the first stops renewing it.
-# Machine counts: fly scale count web=2 worker=2 -a ijaz (deploys keep them).
+#           homepage snapshot); see README. One machine, always on, no web traffic.
+#           It restarts on its own if it crashes. The database lease still prevents
+#           double polling if a second worker is ever added.
+# Machine counts: fly scale count web=2 worker=1 -a ijaz (deploys keep them).
 #
 # Secrets (set with `fly secrets set -a ijaz`, never in this file):
 #   DATABASE_URL          Neon connection string (direct endpoint, not -pooler)
@@ -41,7 +41,7 @@ primary_region = "fra"
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1  # one web machine stays on when idle
   [http_service.concurrency]
     type = "requests"
     soft_limit = 100

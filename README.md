@@ -46,12 +46,12 @@ collector status --hours 24        # per-feed report, article counts, open alert
 
 ## Deploying (Fly.io + Neon)
 
-Everything runs as one Fly.io app, `ijaz` (`fly.toml`, `Dockerfile`), with Postgres 18 on Neon. One image holds both parts and runs as two process groups with two machines each (shared-cpu-1x, 512 MB):
+Everything runs as one Fly.io app, `ijaz` (`fly.toml`, `Dockerfile`), with Postgres 18 on Neon. One image holds both parts and runs as two process groups (shared-cpu-1x, 512 MB machines). When the site is idle, one web machine and one worker machine are on:
 
 | Group | Runs | Machine |
 | --- | --- | --- |
-| `web` | The River page at https://ijaz.fly.dev (Next.js on port 8080) and its read API (FastAPI on 127.0.0.1:8000, not reachable from outside). `/` redirects to `/river` until the homepage exists | Stops when the site is idle and starts on the next visit |
-| `worker` | `collector -v run`: polls feeds, then runs the story step. One worker holds a lease in the database and does each round; the other stands by and takes over within about 40 minutes if the first stops | Always on, no web traffic |
+| `web` | The River page at https://ijaz.fly.dev (Next.js on port 8080) and its read API (FastAPI on 127.0.0.1:8000, not reachable from outside). `/` redirects to `/river` until the homepage exists | Two machines: one always on, the second starts under load and stops when traffic drops |
+| `worker` | `collector -v run`: polls feeds, then runs the story step. It holds a lease in the database for each round, so a second worker, if one is ever added, never polls twice | One machine, always on, no web traffic; restarts on its own if it crashes |
 
 Each deploy first runs `collector init-db && collector load-sources sources/sources.yaml` as the release command, so new tables and indexes exist before the new code starts.
 
@@ -60,13 +60,13 @@ fly secrets set -a ijaz \
   DATABASE_URL='postgresql://USER:PASSWORD@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require' \
   COLLECTOR_USER_AGENT='SiteName/0.1 (+https://site.example/about-our-crawler)'
 fly deploy --ha=false
-fly scale count web=2 worker=2 -a ijaz
+fly scale count web=2 worker=1 -a ijaz
 fly logs -a ijaz
 ```
 
 Use Neon's direct connection string (host without `-pooler`).
 
-After the first manual deploy, merging a pull request into `main` deploys automatically (`.github/workflows/deploy.yml`). It needs one repository secret, `FLY_API_TOKEN`: run `fly tokens create deploy -a ijaz` and add the output under the repository's Settings, Secrets and variables, Actions. Two workers never poll twice: `collector status` shows which one holds the lease.
+After the first manual deploy, merging a pull request into `main` deploys automatically (`.github/workflows/deploy.yml`). It needs one repository secret, `FLY_API_TOKEN`: run `fly tokens create deploy -a ijaz` and add the output under the repository's Settings, Secrets and variables, Actions.
 
 `fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the collector polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
 
