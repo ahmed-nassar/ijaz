@@ -30,7 +30,7 @@ form.filters select{font:inherit;font-size:.8rem;color:var(--muted);background:v
   padding:.2rem .7rem;max-inline-size:11rem}
 form.filters button{font:inherit;font-size:.8rem;color:var(--text);background:none;border:1px solid var(--muted);border-radius:999px;padding:.2rem .8rem;cursor:pointer}
 .reset{font-size:.8rem;color:var(--muted)}
-section.hour h2{font-size:.75rem;font-weight:500;color:var(--faint);margin:1.6rem 0 .3rem}
+section.hour h2{font-size:.8rem;font-weight:600;color:var(--text);margin:1.75rem 0 .4rem;padding-block-end:.35rem;border-block-end:1px solid var(--rule)}
 ol.items{list-style:none;margin:0;padding:0}
 ol.items>li{display:grid;grid-template-columns:2.8rem minmax(0,1fr);gap:0 .75rem;align-items:baseline;padding-block:.3rem}
 .row{display:grid;grid-template-columns:9.5rem minmax(0,1fr);gap:0 .75rem;align-items:baseline}
