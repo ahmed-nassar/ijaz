@@ -321,3 +321,20 @@ def test_json_replies_wrapped_in_text_or_fences_are_read():
     assert parse_json('{"match": 1}') == {"match": 1}
     assert parse_json('```json\n{"match": 2}\n```') == {"match": 2}
     assert parse_json('Here is the answer: {"ok": true, "issues": []} Done.') == {"ok": True, "issues": []}
+
+
+def test_every_chat_call_caps_its_output_so_little_credit_is_reserved():
+    """Without max_tokens, OpenRouter reserves credit for the whole output window and
+    refuses calls when the balance is low (402)."""
+    fake = FakeOpenRouter()
+    c = client(fake)
+    enrich(c, [Report(1, "Gulf", "ar", "2026-11-21 08:00", "حريق في البصرة", None)])
+    from stories.enrich import judge
+
+    judge(c, Report(2, "Nile", "ar", "2026-11-21 09:00", "حريق البصرة", None), [[Report(1, "Gulf", "ar", "2026-11-21 08:00", "حريق في البصرة", None)]])
+    limits = {r["body"]["response_format"]["json_schema"]["name"]: r["body"]["max_tokens"] for r in fake.requests if "max_tokens" in r["body"]}
+    assert limits == {"story": 2500, "check": 800, "judge": 400}
+    import dataclasses
+    c.settings = dataclasses.replace(c.settings, llm_model="google/gemini-4-hydrogen")
+    judge(c, Report(2, "Nile", "ar", "2026-11-21 09:00", "حريق البصرة", None), [[Report(1, "Gulf", "ar", "2026-11-21 08:00", "حريق في البصرة", None)]])
+    assert fake.requests[-1]["body"]["max_tokens"] == 4400

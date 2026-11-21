@@ -16,6 +16,11 @@ class OpenRouterError(RuntimeError):
     pass
 
 
+# Without a limit, OpenRouter reserves credit for the model's whole output window
+# (65,536 or 131,072 tokens) on every call, and refuses calls once the balance is
+# below that. Our answers are short JSON; reasoning models get room to think first.
+REASONING_BUDGET = 4000
+
 # Models whose reasoning cannot be switched off: the lowest effort instead.
 REASONING = {"google/gemini-4-hydrogen": {"effort": "low"}, "meta/muse-ember": {"effort": "low"}}
 
@@ -92,7 +97,7 @@ class OpenRouter:
             del data, rows
         return out
 
-    def chat_json(self, system: str, user: str, schema_name: str, schema: dict) -> dict:
+    def chat_json(self, system: str, user: str, schema_name: str, schema: dict, max_tokens: int = 1000) -> dict:
         body = {
             "model": self.settings.llm_model,
             "messages": [{"role": "system", "content": system + "\nAnswer with the JSON object only."},
@@ -100,6 +105,7 @@ class OpenRouter:
             "response_format": {"type": "json_schema", "json_schema": {"name": schema_name, "strict": True, "schema": schema}},
             "temperature": 0.2,
             "reasoning": REASONING.get(self.settings.llm_model, {"enabled": False}),
+            "max_tokens": max_tokens + (REASONING_BUDGET if self.settings.llm_model in REASONING else 0),
             "usage": {"include": True},
         }
         data = self._post("/chat/completions", body)

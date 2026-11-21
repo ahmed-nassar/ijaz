@@ -87,8 +87,8 @@ def enrich(client: OpenRouter, reports: list[Report], checker: OpenRouter | None
     """``checker`` runs the quality check with another model (the comparison uses one
     fixed checker for every writer); by default the writer checks itself."""
     text = reports_text(reports)
-    result = client.chat_json(WRITE_SYSTEM, text, "story", WRITE_SCHEMA)
-    check = (checker or client).chat_json(CHECK_SYSTEM, f"Headline: {result['headline_ar']}\n\nReports:\n{text}", "check", CHECK_SCHEMA)
+    result = client.chat_json(WRITE_SYSTEM, text, "story", WRITE_SCHEMA, max_tokens=2500)
+    check = (checker or client).chat_json(CHECK_SYSTEM, f"Headline: {result['headline_ar']}\n\nReports:\n{text}", "check", CHECK_SCHEMA, max_tokens=800)
     result["quality"] = check
     return result
 
@@ -125,6 +125,6 @@ def judge_text(new: Report, candidates: list[list[Report]], per_story: int = 3) 
 
 def judge(client: OpenRouter, new: Report, candidates: list[list[Report]]) -> int | None:
     """The position (from 0) of the story the new report belongs to, or None."""
-    result = client.chat_json(JUDGE_SYSTEM, judge_text(new, candidates), "judge", JUDGE_SCHEMA)
+    result = client.chat_json(JUDGE_SYSTEM, judge_text(new, candidates), "judge", JUDGE_SCHEMA, max_tokens=400)
     match = int(result.get("match") or 0)
     return match - 1 if 1 <= match <= len(candidates) else None
