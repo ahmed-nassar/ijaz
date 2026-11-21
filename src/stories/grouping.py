@@ -41,3 +41,38 @@ def group(items: list[Item], score: np.ndarray, threshold: float, window_hours: 
         else:
             stories[best].append(i)
     return [[items[i].id for i in members] for members in stories]
+
+
+def group_with_judge(items: list[Item], score: np.ndarray, low: float, high: float, judge, window_hours: float = 48.0, max_candidates: int = 3) -> list[list[int]]:
+    """Like ``group``, but a story scoring between ``low`` and ``high`` is not joined
+    or refused on the score alone: ``judge(i, candidates)`` decides, where
+    ``candidates`` lists up to ``max_candidates`` stories (lists of item indexes),
+    best first, and the answer is the chosen position or None. A story scoring
+    ``high`` or more is joined without asking."""
+    order = sorted(range(len(items)), key=lambda i: (items[i].time, items[i].id))
+    stories: list[list[int]] = []
+    window = window_hours * 3600
+    for i in order:
+        ranked = []
+        for s, members in enumerate(stories):
+            recent = [m for m in members if (items[i].time - items[m].time).total_seconds() <= window]
+            if not recent:
+                continue
+            top = sorted((float(score[i, m]) for m in recent), reverse=True)[:2]
+            value = sum(top) / len(top)
+            if value >= low:
+                ranked.append((value, s))
+        ranked.sort(reverse=True)
+        chosen = None
+        if ranked and ranked[0][0] >= high:
+            chosen = ranked[0][1]
+        elif ranked:
+            candidates = [s for _, s in ranked[:max_candidates]]
+            pick = judge(i, [stories[s] for s in candidates])
+            if pick is not None and 0 <= pick < len(candidates):
+                chosen = candidates[pick]
+        if chosen is None:
+            stories.append([i])
+        else:
+            stories[chosen].append(i)
+    return [[items[i].id for i in members] for members in stories]

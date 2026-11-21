@@ -89,3 +89,33 @@ def enrich(client: OpenRouter, reports: list[Report]) -> dict:
     check = client.chat_json(CHECK_SYSTEM, f"Headline: {result['headline_ar']}\n\nReports:\n{text}", "check", CHECK_SCHEMA)
     result["quality"] = check
     return result
+
+
+JUDGE_SYSTEM = """\
+You decide whether a news report belongs to an existing story on إيجاز, an Arabic news site.
+A story is one specific event or development: the same incident, statement, meeting, decision or announcement, reported by different outlets, possibly in different languages and with different details or updated figures.
+Reports on the same broad topic but different events are different stories (two different trials, two different matches, a reaction to an event versus the event itself, an analysis piece versus the news).
+You get the new report and up to three candidate stories, each shown by some of its reports.
+Return JSON with match: the number of the candidate story the report belongs to, or 0 if none.
+"""
+
+JUDGE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["match"],
+    "properties": {"match": {"type": "integer", "minimum": 0, "maximum": 3}},
+}
+
+
+def judge_text(new: Report, candidates: list[list[Report]], per_story: int = 3) -> str:
+    parts = ["New report:\n" + reports_text([new])]
+    for n, story in enumerate(candidates, 1):
+        parts.append(f"Candidate story {n}:\n" + reports_text(story[:per_story]))
+    return "\n\n".join(parts)
+
+
+def judge(client: OpenRouter, new: Report, candidates: list[list[Report]]) -> int | None:
+    """The position (from 0) of the story the new report belongs to, or None."""
+    result = client.chat_json(JUDGE_SYSTEM, judge_text(new, candidates), "judge", JUDGE_SCHEMA)
+    match = int(result.get("match") or 0)
+    return match - 1 if 1 <= match <= len(candidates) else None

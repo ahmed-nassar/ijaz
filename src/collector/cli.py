@@ -46,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("gold", nargs="?", default=os.environ.get("STORIES_GOLD", "eval/stories_gold.json"))
     p.add_argument("--enrich", type=int, default=20, help="run the language model on this many of the largest stories")
     p.add_argument("--json", action="store_true", help="print the full report as JSON")
+    p.add_argument("--compare", action="store_true", help="compare the agreed design with stronger embedding models, language weights and a Gemini judge")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
@@ -67,8 +68,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "export-articles":
         return _export_articles(sessions, args.days)
     if args.command == "stories-eval":
-        from stories.evaluate import render, run
+        from stories.evaluate import compare, render, render_compare, run
 
+        if args.compare:
+            report = compare(sessions, args.gold)
+            print(json.dumps(report, ensure_ascii=False, indent=1, default=str) if args.json else render_compare(report))
+            return 0
         report = run(sessions, args.gold, enrich_count=args.enrich)
         print(json.dumps(report, ensure_ascii=False, indent=1, default=str) if args.json else render(report))
         return 0
