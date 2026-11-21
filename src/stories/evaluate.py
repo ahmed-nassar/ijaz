@@ -350,13 +350,15 @@ def _headline_comparison(gold, rows, by_id, n, settings, client, say) -> dict:
 
 
 # Language models compared as judge and as headline writer (Ahmed, 21 Nov 2026):
-# the two measured before as baselines, then DeepSeek V4.1 Flash, GPT-6 Luna and Gemini 4 Hydrogen.
+# the two measured before as baselines, then DeepSeek V4.1 Flash, GPT-6 Luna, Gemini 4 Hydrogen
+# and Meta's Muse Ember (Haiku's price and benchmark score, about twice as fast).
 LLM_MODELS = [
     "google/gemini-3.1-flash-lite",
     "anthropic/claude-haiku-5.5",
     "deepseek/deepseek-v4.1-flash-1017",
     "openai/gpt-6-luna",
     "google/gemini-4-hydrogen",
+    "meta/muse-ember",
 ]
 # (judge model, width of the uncertain band below the threshold); 0.25 was the best band so far.
 JUDGE_RUNS = [(m, 0.25) for m in LLM_MODELS]
