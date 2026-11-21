@@ -72,8 +72,24 @@ def main(argv: list[str] | None = None) -> int:
         from stories.evaluate import compare, render, render_compare, run
 
         if args.compare:
-            report = compare(sessions, args.gold)
-            print(json.dumps(report, ensure_ascii=False, indent=1, default=str) if args.json else render_compare(report))
+            if args.json:
+                print(json.dumps(compare(sessions, args.gold), ensure_ascii=False, indent=1, default=str))
+                return 0
+            from stories.evaluate import render_row
+
+            # Each result is printed when it is ready, so a dropped connection keeps what finished.
+            # Progress goes to stderr: it shows in the terminal but not in a redirected file.
+            def on_row(row):
+                print(render_row(row), flush=True)
+
+            def progress(text):
+                print(f"[{datetime.now(timezone.utc):%H:%M:%S}] {text}", file=sys.stderr, flush=True)
+
+            print("Story grouping comparison (rows appear as they finish)\n", flush=True)
+            report = compare(sessions, args.gold, on_row=on_row, progress=progress)
+            print("\n" + render_compare(report, rows=False).lstrip("\n"))
+            print(f"\nAnswer key: {report['articles']} articles, {report['gold_pairs']} same-story pairs "
+                  f"({report['cross_language_gold_pairs']} across languages). Targets: precision 95%, recall 85%.")
             return 0
         report = run(sessions, args.gold, enrich_count=args.enrich)
         print(json.dumps(report, ensure_ascii=False, indent=1, default=str) if args.json else render(report))
@@ -102,9 +118,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "run":
         if settings.round_minutes > 0:
+            from .lease import claim, worker_id
+
+            me, seconds = worker_id(), settings.round_minutes * 60
+            # The lease outlasts two rounds, so a long story step never lets the standby
+            # start a second round alongside; it is renewed at the start of every round.
             asyncio.run(with_fetcher(lambda f: run_rounds(
-                Collector(settings, sessions, f), settings.round_minutes * 60, engine.dispose,
-                after_round=_story_step(sessions))))
+                Collector(settings, sessions, f), seconds, engine.dispose,
+                after_round=_story_step(sessions),
+                claim=lambda: claim(sessions, "rounds", me, 2 * seconds + 60))))
         else:
             asyncio.run(with_fetcher(lambda f: run_forever(Collector(settings, sessions, f))))
         return 0
@@ -183,6 +205,11 @@ def _status(sessions, hours: int) -> int:
         print(f"{slug:32} {state:8} {polls:>5} {ok or 0:>4} {not_mod or 0:>4} {new:>5}  {last}")
     print(f"\n{publishers} publishers; {active} active feeds; {healthy} with every poll successful in the last {hours} h")
     print(f"{articles} articles stored in the last {hours} h, {syndicated} marked as syndicated copies")
+    from .lease import holder
+
+    lease = holder(sessions, "rounds")
+    if lease:
+        print(f"rounds done by worker {lease[0]} (lease until {lease[1]:%Y-%m-%d %H:%M} UTC)")
     for alert in open_alerts:
         print(f"ALERT {alert.created_at:%Y-%m-%d %H:%M} {alert.kind}: {alert.message}")
     return 0

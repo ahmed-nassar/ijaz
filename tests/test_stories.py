@@ -232,8 +232,63 @@ def test_comparison_end_to_end(sessions, tmp_path):
     groups = {f"g{i}": ids for i, ids in enumerate(v for v in by_title.values() if len(v) > 1)}
     gold = tmp_path / "gold.json"
     gold.write_text(json.dumps({"articles": [a.id for a in articles], "groups": groups}))
-    report = compare(sessions, str(gold), client=client(FakeOpenRouter()), models=["openai/text-embedding-3-small", "qwen/qwen3-embedding-8b"])
+    streamed, notes = [], []
+    report = compare(sessions, str(gold), client=client(FakeOpenRouter()), models=["openai/text-embedding-3-small", "qwen/qwen3-embedding-8b"],
+                     on_row=streamed.append, progress=notes.append)
+    assert streamed == report["rows"]  # every row is handed out as soon as it is ready
+    assert any("embedding" in n for n in notes)
     variants = [r["variant"] for r in report["rows"]]
     assert len(variants) == 9 and "claude-haiku-5.5 judge" in variants[-1] and "gemini-3.1-flash-lite judge" in variants[-3]
     assert "agreed design" in variants[0]
     assert "per 1,000 articles" in render_compare(report)
+
+
+def test_word_similarity_matches_the_full_matrix():
+    """Leaving out words that only one article uses must not change any score."""
+    import math as _math
+    from collections import Counter as _Counter
+
+    docs = [article_words(t, None) for t in [
+        "Fire at Basra power station kills four", "Basra power station fire: four dead",
+        "Gold prices fall in Cairo", "Unique words only here", "Gold falls again in Cairo trading",
+    ]]
+    df = _Counter(w for d in docs for w in set(d))
+    vocab = {w: i for i, w in enumerate(df)}
+    m = np.zeros((len(docs), len(vocab)))
+    for r, d in enumerate(docs):
+        for w, c in _Counter(d).items():
+            m[r, vocab[w]] = (1 + _math.log(c)) * (_math.log((1 + len(docs)) / (1 + df[w])) + 1)
+    unit = m / np.linalg.norm(m, axis=1, keepdims=True)
+    assert np.allclose(word_similarity(docs), unit @ unit.T, atol=1e-6)
+
+
+def test_comparison_judge_runs_in_parallel_with_their_own_clients(sessions, tmp_path, monkeypatch):
+    """Without a shared test client, each judge run gets its own client and they run side by side."""
+    import stories.evaluate as evaluate
+
+    with sessions() as s:
+        seed(s, 40, now=T0)
+        articles = s.query(Article).all()
+    by_title = defaultdict(list)
+    for a in articles:
+        by_title[a.title].append(a.id)
+    gold = tmp_path / "gold.json"
+    gold.write_text(json.dumps({"articles": [a.id for a in articles],
+                                "groups": {f"g{i}": v for i, v in enumerate(v for v in by_title.values() if len(v) > 1)}}))
+    fake = FakeOpenRouter()
+    made = []
+
+    def factory(settings, client=None):
+        c = OpenRouter(StorySettings(api_key="k", base_url="https://openrouter.test/api/v1",
+                                     embedding_model=settings.embedding_model, llm_model=settings.llm_model),
+                       client=httpx.Client(transport=httpx.MockTransport(fake)))
+        made.append(settings.llm_model)
+        return c
+
+    monkeypatch.setattr(evaluate, "OpenRouter", factory)
+    report = evaluate.compare(sessions, str(gold), settings=StorySettings(api_key="k"), models=["qwen/qwen3-embedding-8b"])
+    judged = [r for r in report["rows"] if "judge between" in r.get("variant", "")]
+    assert len(judged) == 3 and all(r["llm_calls"] >= 0 for r in judged)
+    assert "anthropic/claude-haiku-5.5" in made
+    judge_models = {r["body"]["model"] for r in fake.requests if r["path"].endswith("/chat/completions")}
+    assert judge_models <= {"google/gemini-3.1-flash-lite", "anthropic/claude-haiku-5.5"}

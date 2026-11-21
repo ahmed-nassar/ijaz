@@ -46,6 +46,7 @@ async def run_rounds(
     release_connections: Callable[[], None] = lambda: None,
     rounds: int | None = None,
     after_round: Callable[[], None] | None = None,
+    claim: Callable[[], bool] | None = None,
 ) -> None:
     """Poll in rounds, then leave the database alone until the next round.
 
@@ -55,20 +56,29 @@ async def run_rounds(
 
     ``after_round`` (the story step) runs in a worker thread once the polls are done,
     before the connections are closed.
+
+    ``claim`` (the worker lease) is asked at the start of each round; when it says no,
+    another worker is doing the work and this one stands by until the next round.
     """
     done = 0
     while rounds is None or done < rounds:
         started = time.monotonic()
         try:
-            reports = await poll_once(collector, horizon_seconds=round_seconds)
-            log.info("round finished: %d feeds polled", len(reports))
+            leading = True
+            if claim is not None:
+                leading = claim()
+            if not leading:
+                log.info("standby: another worker holds this round")
+            else:
+                reports = await poll_once(collector, horizon_seconds=round_seconds)
+                log.info("round finished: %d feeds polled", len(reports))
+                if after_round is not None:
+                    try:
+                        await asyncio.to_thread(after_round)
+                    except Exception:
+                        log.exception("after-round step failed")
         except Exception:
             log.exception("round failed")
-        try:
-            if after_round is not None:
-                await asyncio.to_thread(after_round)
-        except Exception:
-            log.exception("after-round step failed")
         finally:
             release_connections()
         done += 1

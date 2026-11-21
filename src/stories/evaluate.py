@@ -211,7 +211,7 @@ COMPARE_MODELS = ["openai/text-embedding-3-small", "openai/text-embedding-3-larg
 
 
 def compare(sessions, gold_path: str, settings: StorySettings | None = None, client: OpenRouter | None = None,
-            models: list[str] | None = None) -> dict:
+            models: list[str] | None = None, on_row=None, progress=None) -> dict:
     """Measure the agreed design next to the candidate fixes, on the same answer key:
     stronger embedding models, no word weight across languages, and a Gemini judge
     for uncertain matches. Every row reports precision, recall and cost."""
@@ -241,12 +241,22 @@ def compare(sessions, gold_path: str, settings: StorySettings | None = None, cli
     def add(name, matrix, model, emb_cost):
         best = choose(sweep(items, matrix, gold_pairs, settings.window_hours, thresholds))
         predicted = pairs(best["groups"])
-        out.append({"variant": name, "model": model, "threshold": best["threshold"], "precision": best["precision"],
+        matrices[name] = matrix
+        emit({"variant": name, "model": model, "threshold": best["threshold"], "precision": best["precision"],
                     "recall": best["recall"], "cross_language_recall": scores(predicted, cross)[1] if cross else None,
                     "llm_calls": 0, "cost_per_1000_usd": emb_cost / n * 1000})
-        matrices[name] = matrix
+
+    def emit(row):
+        out.append(row)
+        if on_row:
+            on_row(row)
+
+    def say(text):
+        if progress:
+            progress(text)
 
     for model in models or COMPARE_MODELS:
+        say(f"embedding {n} articles with {model}")
         c = client or OpenRouter(replace(settings, embedding_model=model))
         if client is not None:
             c.settings = replace(settings, embedding_model=model)
@@ -254,7 +264,7 @@ def compare(sessions, gold_path: str, settings: StorySettings | None = None, cli
         try:
             meaning = embedding_similarity(c.embed(texts))
         except Exception as e:
-            out.append({"variant": "error", "model": model, "error": str(e)[:200]})
+            emit({"variant": "error", "model": model, "error": str(e)[:200]})
             continue
         cost = c.embedding_usage.cost_usd - before
         short = model.split("/")[-1]
@@ -266,9 +276,24 @@ def compare(sessions, gold_path: str, settings: StorySettings | None = None, cli
     ok = [r for r in out if "error" not in r and r["precision"] >= PRECISION_TARGET]
     if ok:
         base = max(ok, key=lambda r: (r["recall"], r["precision"]))
-        for judge_model, width in JUDGE_RUNS:
-            out.append(_judged(base, matrices[base["variant"]], judge_model, width, settings, client, rows, by_id, items,
-                               gold_pairs, cross, n))
+        # The judge runs are independent, so they run side by side (each makes its
+        # calls in article order, as grouping needs). A shared test client stays sequential.
+        say(f"{len(JUDGE_RUNS)} judge runs on: {base['variant']}")
+        args = [(base, matrices[base["variant"]], m, w, settings, client, rows, by_id, items, gold_pairs, cross, n)
+                for m, w in JUDGE_RUNS]
+        if client is not None:
+            for a in args:
+                emit(_judged(*a))
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+
+            with ThreadPoolExecutor(max_workers=len(args)) as pool:
+                futures = [pool.submit(_judged, *a, progress=say) for a in args]
+                for f in futures:
+                    try:
+                        emit(f.result())
+                    except Exception as e:  # one failed run must not lose the others
+                        emit({"variant": "error", "model": "judge", "error": str(e)[:200]})
     return {"articles": n, "gold_pairs": len(gold_pairs), "cross_language_gold_pairs": len(cross), "rows": out}
 
 
@@ -280,7 +305,7 @@ JUDGE_RUNS = [
 ]
 
 
-def _judged(base, matrix, judge_model, width, settings, client, rows, by_id, items, gold_pairs, cross, n):
+def _judged(base, matrix, judge_model, width, settings, client, rows, by_id, items, gold_pairs, cross, n, progress=None):
     from dataclasses import replace
 
     from .enrich import judge as judge_call
@@ -298,6 +323,8 @@ def _judged(base, matrix, judge_model, width, settings, client, rows, by_id, ite
         return Report(r.id, r.publisher, r.language, r.time.strftime("%Y-%m-%d %H:%M"), r.title, r.excerpt)
 
     def ask(i, candidates):
+        if progress and (c.llm_usage.calls - before_calls) % 50 == 49:
+            progress(f"{judge_model} (band {width}): {c.llm_usage.calls - before_calls + 1} calls")
         try:
             return judge_call(c, report(i), [[report(m) for m in story] for story in candidates])
         except Exception as e:
@@ -318,19 +345,28 @@ def _judged(base, matrix, judge_model, width, settings, client, rows, by_id, ite
 
 
 
-def render_compare(report: dict) -> str:
-    lines = [f"Answer key: {report['articles']} articles, {report['gold_pairs']} same-story pairs "
-             f"({report['cross_language_gold_pairs']} across languages). Targets: precision {PRECISION_TARGET:.0%}, recall {RECALL_TARGET:.0%}.",
-             "Each row uses the threshold with the highest recall at precision 95% or more (or the best balance if none reaches 95%).", ""]
-    for r in report["rows"]:
-        if "error" in r:
-            lines.append(f"{r['model']}: could not run ({r['error']})")
-            continue
-        x = f"{r['cross_language_recall']:.0%}" if r["cross_language_recall"] is not None else "n/a"
-        lines.append(f"{r['variant']}\n    threshold {r['threshold']}: precision {r['precision']:.1%}, recall {r['recall']:.1%}, "
-                     f"across languages {x}; {r['llm_calls']} judge calls; ${r['cost_per_1000_usd']:.3f} per 1,000 articles")
-        if r.get("judge_errors"):
-            lines.append(f"    {r['judge_errors']} judge calls failed, first: {r['first_error']}")
+def render_row(r: dict) -> str:
+    if "error" in r:
+        return f"{r['model']}: could not run ({r['error']})"
+    x = f"{r['cross_language_recall']:.0%}" if r["cross_language_recall"] is not None else "n/a"
+    line = (f"{r['variant']}\n    threshold {r['threshold']}: precision {r['precision']:.1%}, recall {r['recall']:.1%}, "
+            f"across languages {x}; {r['llm_calls']} judge calls; ${r['cost_per_1000_usd']:.3f} per 1,000 articles")
+    if r.get("judge_errors"):
+        line += f"\n    {r['judge_errors']} judge calls failed, first: {r['first_error']}"
+    return line
+
+
+def compare_header(articles: int, gold_pairs: int, cross: int) -> str:
+    return "\n".join([
+        f"Answer key: {articles} articles, {gold_pairs} same-story pairs ({cross} across languages). "
+        f"Targets: precision {PRECISION_TARGET:.0%}, recall {RECALL_TARGET:.0%}.",
+        "Each row uses the threshold with the highest recall at precision 95% or more (or the best balance if none reaches 95%).", ""])
+
+
+def render_compare(report: dict, rows: bool = True) -> str:
+    lines = [compare_header(report["articles"], report["gold_pairs"], report["cross_language_gold_pairs"])] if rows else []
+    if rows:
+        lines += [render_row(r) for r in report["rows"]]
     for r in report["rows"]:
         if "wrongly_joined" not in r:
             continue
