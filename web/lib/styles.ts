@@ -56,6 +56,27 @@ details.copies a:hover{color:var(--link);text-decoration:underline}
 nav.pager{display:flex;justify-content:space-between;gap:1rem;padding-block:2rem;font-size:.85rem}
 nav.pager a{text-decoration:none}
 .empty,.error{padding-block:2rem;color:var(--muted)}
+.updated{font-size:.75rem;color:var(--faint);margin:0}
+.updated a{color:var(--muted)}
+ol.stories{list-style:none;margin:0;padding:0}
+.story-entry{padding-block:.9rem;border-block-end:1px solid var(--rule)}
+.story-entry:last-child{border-block-end:0}
+.story-entry .meta{margin:0;font-size:.75rem;color:var(--faint)}
+.story-entry .meta .publisher{display:inline;color:var(--muted);font-size:inherit}
+.story-title{font-size:1.02rem;line-height:1.55;font-weight:500;margin:.1rem 0 .2rem}
+.story-entry:first-child .story-title{font-size:1.2rem}
+.original{margin:0 0 .2rem;font-size:.8rem;color:var(--muted)}
+.original-label{color:var(--faint)}
+.more{margin:0;font-size:.78rem;color:var(--faint)}
+.more a{color:var(--muted);text-decoration:none}
+.more a:hover,.more a:focus-visible{color:var(--link);text-decoration:underline}
+.more a.all{color:var(--link);white-space:nowrap}
+.back{margin-block:1.25rem 0;font-size:.8rem}
+.back a{text-decoration:none}
+.story-page-title{font-size:1.2rem;line-height:1.55;font-weight:600;margin:.5rem 0 .25rem}
+.story-articles{margin-block-start:1rem}
+ol.story-articles>li{grid-template-columns:5.5rem minmax(0,1fr)}
+.translation{display:block;font-size:.78rem;color:var(--muted)}
 footer.site{color:var(--faint);font-size:.75rem;padding-block:1.5rem 2.5rem;border-block-start:1px solid var(--rule)}
 .sr-only{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media (max-width:40rem){

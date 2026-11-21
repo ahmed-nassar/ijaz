@@ -8,14 +8,15 @@ from collections.abc import Iterator
 from functools import lru_cache
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Response
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, sessionmaker
 
 from collector.config import get_settings
 from collector.db import make_engine, session_factory
 
-from .river import BadCursor, filter_options, river_page
+from .river import BadCursor, RiverItem, filter_options, river_page
+from .stories import homepage, story_page
 
 app = FastAPI(title="News read API", docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -57,6 +58,55 @@ class RiverOut(BaseModel):
     next_cursor: str | None
 
 
+def _item_out(i: RiverItem) -> ItemOut:
+    return ItemOut(
+        id=i.id, title=i.title, url=i.url, language=i.language, time=i.time.isoformat(),
+        publisher_slug=i.publisher_slug, publisher=i.publisher, publisher_ar=i.publisher_ar,
+        copies=[CopyOut(publisher=c.publisher, publisher_ar=c.publisher_ar, url=c.url) for c in i.copies],
+    )
+
+
+class OutletOut(BaseModel):
+    publisher: str
+    publisher_ar: str | None
+    url: str
+    language: str
+
+
+class HomeStoryOut(BaseModel):
+    id: int
+    rank: int
+    headline: str
+    headline_by: str  # ijaz | publisher
+    lead: ItemOut
+    lead_title_ar: str | None
+    more: list[OutletOut]
+    article_count: int
+    importance: int | None
+
+
+class HomeOut(BaseModel):
+    updated: str | None
+    stories: list[HomeStoryOut]
+
+
+class StoryArticleOut(BaseModel):
+    item: ItemOut
+    title_ar: str | None
+
+
+class StoryOut(BaseModel):
+    id: int
+    headline: str
+    headline_by: str
+    importance: int | None
+    event_date: str | None
+    first_time: str
+    last_time: str
+    articles: list[StoryArticleOut]
+    redirect_to: int | None
+
+
 @app.get("/api/health")
 def health() -> dict:
     return {"ok": True}
@@ -78,14 +128,7 @@ def get_river(
         raise HTTPException(status_code=400, detail="invalid cursor") from None
     response.headers["Cache-Control"] = "public, max-age=30"
     return RiverOut(
-        items=[
-            ItemOut(
-                id=i.id, title=i.title, url=i.url, language=i.language, time=i.time.isoformat(),
-                publisher_slug=i.publisher_slug, publisher=i.publisher, publisher_ar=i.publisher_ar,
-                copies=[CopyOut(publisher=c.publisher, publisher_ar=c.publisher_ar, url=c.url) for c in i.copies],
-            )
-            for i in page.items
-        ],
+        items=[_item_out(i) for i in page.items],
         next_cursor=page.next_cursor,
     )
 
@@ -105,3 +148,34 @@ def get_filters(session: SessionDep, response: Response) -> dict:
         if _filters_cache is None or time.monotonic() - _filters_cache[0] > FILTERS_TTL:
             _filters_cache = (time.monotonic(), filter_options(session))
         return _filters_cache[1]
+
+
+@app.get("/api/home", response_model=HomeOut)
+def get_home(session: SessionDep, response: Response) -> HomeOut:
+    updated, stories = homepage(session)
+    response.headers["Cache-Control"] = "public, max-age=30"
+    return HomeOut(
+        updated=updated.isoformat() if updated else None,
+        stories=[
+            HomeStoryOut(
+                id=s.id, rank=s.rank, headline=s.headline, headline_by=s.headline_by, lead=_item_out(s.lead),
+                lead_title_ar=s.lead_title_ar, more=[OutletOut(**vars(o)) for o in s.more],
+                article_count=s.article_count, importance=s.importance,
+            )
+            for s in stories
+        ],
+    )
+
+
+@app.get("/api/story/{story_id}", response_model=StoryOut)
+def get_story(story_id: Annotated[int, Path(ge=1, le=2**31 - 1)], session: SessionDep, response: Response) -> StoryOut:
+    page = story_page(session, story_id)
+    if page is None:
+        raise HTTPException(status_code=404, detail="no such story")
+    response.headers["Cache-Control"] = "public, max-age=30"
+    return StoryOut(
+        id=page.id, headline=page.headline, headline_by=page.headline_by, importance=page.importance,
+        event_date=page.event_date, first_time=page.first_time.isoformat(), last_time=page.last_time.isoformat(),
+        articles=[StoryArticleOut(item=_item_out(i), title_ar=t) for i, t in page.articles],
+        redirect_to=page.redirect_to,
+    )

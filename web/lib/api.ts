@@ -60,3 +60,36 @@ export function fetchRiver(filters: Filters, cursor?: string): Promise<RiverResp
 export function fetchFilters(): Promise<FilterOptions> {
   return get<FilterOptions>("/api/river/filters", {});
 }
+
+export type Outlet = { publisher: string; publisher_ar: string | null; url: string; language: string };
+export type HomeStory = {
+  id: number;
+  rank: number;
+  headline: string;
+  headline_by: "ijaz" | "publisher";
+  lead: Item;
+  lead_title_ar: string | null;
+  more: Outlet[];
+  article_count: number;
+  importance: number | null;
+};
+export type HomeResponse = { updated: string | null; stories: HomeStory[] };
+export type StoryResponse = {
+  id: number;
+  headline: string;
+  headline_by: "ijaz" | "publisher";
+  importance: number | null;
+  event_date: string | null;
+  first_time: string;
+  last_time: string;
+  articles: { item: Item; title_ar: string | null }[];
+  redirect_to: number | null;
+};
+
+export function fetchHome(): Promise<HomeResponse> {
+  return get<HomeResponse>("/api/home", {});
+}
+
+export function fetchStory(id: number): Promise<StoryResponse> {
+  return get<StoryResponse>(`/api/story/${id}`, {});
+}

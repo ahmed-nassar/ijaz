@@ -47,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--enrich", type=int, default=20, help="run the language model on this many of the largest stories")
     p.add_argument("--json", action="store_true", help="print the full report as JSON")
     p.add_argument("--compare", action="store_true", help="compare the agreed design with stronger embedding models, language weights and a Gemini judge")
+    sub.add_parser("stories-run", help="group new articles into stories, write headlines, rank and save a homepage snapshot, once")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
@@ -78,6 +79,13 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, ensure_ascii=False, indent=1, default=str) if args.json else render(report))
         return 0
 
+    if args.command == "stories-run":
+        from stories.live import run_step
+
+        report = run_step(sessions)
+        print(json.dumps(vars(report), ensure_ascii=False, indent=1, default=str))
+        return 0
+
     async def with_fetcher(fn):
         fetcher = Fetcher(settings)
         try:
@@ -95,7 +103,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "run":
         if settings.round_minutes > 0:
             asyncio.run(with_fetcher(lambda f: run_rounds(
-                Collector(settings, sessions, f), settings.round_minutes * 60, engine.dispose)))
+                Collector(settings, sessions, f), settings.round_minutes * 60, engine.dispose,
+                after_round=_story_step(sessions))))
         else:
             asyncio.run(with_fetcher(lambda f: run_forever(Collector(settings, sessions, f))))
         return 0
@@ -112,6 +121,30 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{ok} of {len(reports)} publishers have at least one fresh, valid feed; draft written to {args.out}")
         return 0
     return 1
+
+
+def _story_step(sessions):
+    """The story step to run after each round, or None when it is off or has no key."""
+    from stories.config import LiveSettings, StorySettings
+
+    live, story_settings = LiveSettings(), StorySettings()
+    if not live.enabled or not story_settings.api_key:
+        logging.getLogger("collector").warning("story step off (STORIES_LIVE=0 or no IJAZ_OPENROUTER_KEY)")
+        return None
+
+    def step() -> None:
+        from stories.live import run_step
+
+        report = run_step(sessions, live, story_settings)
+        logging.getLogger("stories").info(
+            "stories: %d new articles, %d by score, %d by judge (%d calls, %d errors), %d new stories, "
+            "%d enriched (%d errors), snapshot %s, $%.4f %s",
+            report.new_articles, report.joined_by_score, report.joined_by_judge, report.judge_calls,
+            report.judge_errors, report.new_stories, report.enriched, report.enrich_errors,
+            report.snapshot_id, report.cost_usd, "; ".join(report.errors),
+        )
+
+    return step
 
 
 def _status(sessions, hours: int) -> int:

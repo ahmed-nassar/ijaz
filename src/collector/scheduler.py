@@ -45,12 +45,16 @@ async def run_rounds(
     round_seconds: int,
     release_connections: Callable[[], None] = lambda: None,
     rounds: int | None = None,
+    after_round: Callable[[], None] | None = None,
 ) -> None:
     """Poll in rounds, then leave the database alone until the next round.
 
     Each round polls every source due before the next round starts, waits for all of
     them, and closes the pooled connections. Between rounds nothing touches the
     database, so a serverless Postgres such as Neon can scale its compute to zero.
+
+    ``after_round`` (the story step) runs in a worker thread once the polls are done,
+    before the connections are closed.
     """
     done = 0
     while rounds is None or done < rounds:
@@ -60,6 +64,11 @@ async def run_rounds(
             log.info("round finished: %d feeds polled", len(reports))
         except Exception:
             log.exception("round failed")
+        try:
+            if after_round is not None:
+                await asyncio.to_thread(after_round)
+        except Exception:
+            log.exception("after-round step failed")
         finally:
             release_connections()
         done += 1
