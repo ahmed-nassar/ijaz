@@ -52,11 +52,14 @@ check("pager: «أقدم» opens an older page", page.url().includes("cursor=") 
 check("pager: «الأحدث» shown on later pages", (await page.getByRole("link", { name: "الأحدث" }).count()) === 1);
 
 await page.goto(`${base}/river`);
+check("filters: folded away by default", !(await page.locator('select[name="lang"]').isVisible()));
+await page.locator("details.filter-toggle summary").click();
 await page.selectOption('select[name="lang"]', "tr");
 await page.getByRole("button", { name: "عرض" }).click();
 await page.waitForLoadState("networkidle");
 const langs = await page.locator("a.headline").evaluateAll((as) => [...new Set(as.map((a) => a.lang))]);
 check("filter: language form works without JavaScript", page.url().includes("lang=tr") && langs.join() === "tr", langs.join());
+check("filters: shown open while a filter is in use", await page.locator('select[name="lang"]').isVisible());
 await page.screenshot({ path: `${out}/river-filtered-tr.png` });
 
 const bad = await page.goto(`${base}/river?cursor=nonsense`);
