@@ -21,7 +21,8 @@ ENV PYTHONUNBUFFERED=1 \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=8080 \
     HOSTNAME=0.0.0.0 \
-    API_URL=http://127.0.0.1:8000
+    API_URL=http://127.0.0.1:8000 \
+    STORIES_GOLD=/app/eval/stories_gold.json
 COPY --from=web /usr/local/bin/node /usr/local/bin/node
 
 WORKDIR /app
@@ -31,6 +32,7 @@ COPY src ./src
 RUN pip install .
 
 COPY sources ./sources
+COPY eval ./eval
 COPY --from=web /web/.next/standalone ./web
 COPY --from=web /web/.next/static ./web/.next/static
 COPY --from=web /web/public ./web/public

@@ -111,6 +111,23 @@ node web/scripts/check-page.mjs http://localhost:3000 out/    # no scripts, 375 
 node web/scripts/measure-lcp.mjs http://localhost:3000        # LCP on slow 4G with a 4x slower CPU
 ```
 
+## Stories, part 1: measuring the grouping
+
+`src/stories` holds the grouping and language model steps from spec section 15, measured against a hand-made answer key before anything runs on the live site. It writes nothing to the database.
+
+- Grouping: half word overlap (TF-IDF over the headline and excerpt) and half meaning similarity from `openai/text-embedding-3-small`. Articles are grouped one at a time in publishing order; an article joins the best matching story within 48 hours if the score reaches the threshold.
+- Language model: `google/gemini-3.1-flash-lite` writes an Arabic headline, rates importance from 1 to 5, translates non-Arabic headlines and reads the event date, in one call. A second call checks that headline against the reports.
+- Both go through OpenRouter with the `IJAZ_OPENROUTER_KEY` secret. Only headlines and short excerpts are sent. Model names, the word weight and the threshold are environment settings (`STORIES_EMBEDDING_MODEL`, `STORIES_LLM_MODEL`, `STORIES_WORD_WEIGHT`, `STORIES_THRESHOLD`).
+- `eval/stories_gold.json` is the answer key: 471 articles from 21 Nov 2026, 03:00 to 11:38 UTC, with 64 stories of two or more reports. It holds article ids only; the articles are read from the production database.
+
+Run the measurement on Fly, where the key and the articles are:
+
+```
+fly ssh console -a ijaz -s -C "collector stories-eval" > stories-report.txt
+```
+
+It prints precision and recall at each threshold (targets: 95% and 85%), the best results for words alone and meaning alone, the pairs it got wrong, the language model's output for the 20 largest stories, and the cost. `--json` prints everything as JSON; `--enrich N` changes how many stories go to the language model.
+
 ## Not in this increment
 
-Clustering, ranking, AI, the homepage, search, GDELT and Google News discovery, Scrapy for outlets without feeds, Bluesky, and database migrations (Alembic arrives once the schema settles; for now `init-db` creates tables).
+Storing stories, ranking, the homepage, search, GDELT and Google News discovery, Scrapy for outlets without feeds, Bluesky, and database migrations (Alembic arrives once the schema settles; for now `init-db` creates tables).
