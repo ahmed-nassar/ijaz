@@ -116,7 +116,7 @@ node web/scripts/measure-lcp.mjs http://localhost:3000        # LCP on slow 4G w
 `src/stories` holds the grouping and language model steps from spec section 15, measured against a hand-made answer key before anything runs on the live site. It writes nothing to the database.
 
 - Grouping: half word overlap (TF-IDF over the headline and excerpt) and half meaning similarity from `openai/text-embedding-3-small`. Articles are grouped one at a time in publishing order; an article joins the best matching story within 48 hours if the score reaches the threshold.
-- Language model: `google/gemini-3.1-flash-lite` writes an Arabic headline, rates importance from 1 to 5, translates non-Arabic headlines and reads the event date, in one call. A second call checks that headline against the reports.
+- Language model: `openai/gpt-6-luna` (chosen from the six-model comparison on 21 Nov 2026; previously `google/gemini-3.1-flash-lite`, now deprecated) writes an Arabic headline, rates importance from 1 to 5, translates non-Arabic headlines and reads the event date, in one call. A second call checks that headline against the reports.
 - Both go through OpenRouter with the `IJAZ_OPENROUTER_KEY` secret. Only headlines and short excerpts are sent. Model names, the word weight and the threshold are environment settings (`STORIES_EMBEDDING_MODEL`, `STORIES_LLM_MODEL`, `STORIES_WORD_WEIGHT`, `STORIES_THRESHOLD`).
 - `eval/stories_gold.json` is the answer key: 471 articles from 21 Nov 2026, 03:00 to 11:38 UTC, with 64 stories of two or more reports. It holds article ids only; the articles are read from the production database.
 
@@ -128,7 +128,7 @@ fly console -a ijaz --vm-memory 1024 -C "collector stories-eval" > stories-repor
 
 It prints precision and recall at each threshold (targets: 95% and 85%), the best results for words alone and meaning alone, the pairs it got wrong, the language model's output for the 20 largest stories, and the cost. `--json` prints everything as JSON; `--enrich N` changes how many stories go to the language model.
 
-`collector stories-eval --compare` (same `fly console` command) prints each result as soon as it is ready, with progress in the terminal, so an interrupted run keeps what finished. It measures the agreed design next to candidate fixes on the same answer key: `text-embedding-3-large` and `qwen/qwen3-embedding-8b`, no word weight for pairs in different languages, and a judge (Gemini 3.1 Flash Lite with two band widths, and Claude Haiku 5.5) that decides matches in the uncertain band. Each row shows precision, recall, recall across languages and cost per 1,000 articles. The judge runs and a headline test compare six language models: `google/gemini-3.1-flash-lite` and `anthropic/claude-haiku-5.5` as baselines, `deepseek/deepseek-v4.1-flash-1017`, `openai/gpt-6-luna`, `google/gemini-4-hydrogen` (which cannot switch reasoning off, so it runs at low effort) and `meta/muse-ember`. For headlines, each model writes the 12 largest answer-key stories and Haiku 5.5 checks all of them, so pass rates compare; the output shows every model's headline side by side, with cost per story and per 1,000 articles.
+`collector stories-eval --compare` (same `fly console` command) prints each result as soon as it is ready, with progress in the terminal, so an interrupted run keeps what finished. It measures the agreed design next to candidate fixes on the same answer key: `text-embedding-3-large` and `qwen/qwen3-embedding-8b`, no word weight for pairs in different languages, and a judge (Gemini 3.1 Flash Lite with two band widths, and Claude Haiku 5.5) that decides matches in the uncertain band. Each row shows precision, recall, recall across languages and cost per 1,000 articles. The judge runs and a headline test compare six language models: `google/gemini-3.1-flash-lite` and `anthropic/claude-haiku-5.5` as baselines, `deepseek/deepseek-v4.1-flash-1017`, `openai/gpt-6-luna`, `google/gemini-4-hydrogen` and `meta/muse-ember` (neither can switch reasoning off, so both run at low effort). For headlines, each model writes the 12 largest answer-key stories and Haiku 5.5 checks all of them, so pass rates compare; the output shows every model's headline side by side, with cost per story and per 1,000 articles.
 
 ## Stories, part 2: the homepage (preview)
 
@@ -147,8 +147,8 @@ The live step's settings are the best measured so far, not the agreed starting d
 | Word weight, same language | 0.5 | `STORIES_LIVE_WORD_WEIGHT` |
 | Word weight, different languages | 0 | `STORIES_LIVE_WORD_WEIGHT_CROSS` |
 | Join on the score alone at | 0.625 | `STORIES_LIVE_THRESHOLD` |
-| Judge decides from | 0.35 (0 turns the judge off) | `STORIES_LIVE_JUDGE_LOW` |
-| Headlines, importance, judge | `google/gemini-3.1-flash-lite` | `STORIES_LLM_MODEL` |
+| Judge decides from | 0.375 (0 turns the judge off) | `STORIES_LIVE_JUDGE_LOW` |
+| Headlines, importance, judge | `openai/gpt-6-luna` | `STORIES_LLM_MODEL` |
 | Recency half-life | 12 hours | `STORIES_HALF_LIFE_HOURS` |
 
 `STORIES_LIVE=0` turns the step off. `collector stories-run` runs it once by hand.
