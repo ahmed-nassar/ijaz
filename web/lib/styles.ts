@@ -34,16 +34,22 @@ form.filters button{font:inherit;font-weight:600;color:#fff;background:var(--lin
 .reset{font-size:.9rem;align-self:center}
 section.hour h2{font-size:.95rem;font-weight:600;color:var(--muted);margin:1.5rem 0 .25rem;padding-block-end:.25rem;border-block-end:1px solid var(--rule)}
 ol.items{list-style:none;margin:0;padding:0}
-ol.items>li{display:grid;grid-template-columns:3.4rem minmax(0,1fr);gap:0 .75rem;padding-block:.55rem;border-block-end:1px solid var(--rule)}
+ol.items>li{padding-block:.4rem;border-block-end:1px solid var(--rule);line-height:1.65}
 ol.items>li:last-child{border-block-end:0}
-.time{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums;padding-block-start:.1rem}
-.meta{display:block;font-size:.85rem;color:var(--muted);line-height:1.5}
-.publisher{font-weight:600;color:var(--chip-text)}
-.headline{font-size:1.06rem;font-weight:600;overflow-wrap:anywhere}
+.time{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums;margin-inline-end:.4rem}
+.publisher{font-size:.92rem;color:var(--muted);margin-inline-end:.15rem}
+.headline{font-weight:600;overflow-wrap:anywhere}
+/* A left-to-right headline inside a right-to-left row stays one block, so a wrapped English line still reads in order */
+.headline[dir=ltr]{display:inline-block;max-inline-size:100%}
 .lang{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;line-height:1.4;color:var(--chip-text);background:var(--chip-bg);
   border-radius:3px;padding-inline:.35rem;margin-inline-start:.4rem;vertical-align:.1em;text-decoration:none}
-details.copies{margin-block-start:.15rem;font-size:.85rem}
-details.copies summary{cursor:pointer;color:var(--muted);inline-size:fit-content}
+details.copies{display:inline;margin-inline-start:.5rem;font-size:.85rem}
+details.copies[open]{display:block;margin-inline-start:0}
+details.copies summary{display:inline;white-space:nowrap;cursor:pointer;color:var(--muted);list-style:none}
+details.copies summary::-webkit-details-marker{display:none}
+details.copies summary::before{content:"▸ "}
+[dir=rtl] details.copies summary::before{content:"◂ "}
+details.copies[open] summary::before{content:"▾ "}
 details.copies ul{margin:.25rem 0 0;padding-inline-start:1.25rem}
 nav.pager{display:flex;justify-content:space-between;gap:1rem;padding-block:1.5rem;font-weight:600}
 .empty,.error{padding-block:2rem;color:var(--muted)}
@@ -51,7 +57,5 @@ footer.site{border-block-start:1px solid var(--rule);color:var(--muted);font-siz
 .sr-only{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media (max-width:30rem){
   body{font-size:1rem}
-  ol.items>li{grid-template-columns:2.9rem minmax(0,1fr);gap:0 .5rem}
-  .headline{font-size:1rem}
 }
 `;

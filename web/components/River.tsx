@@ -159,14 +159,11 @@ export function RiverPage(props: {
           <ol className="items">
             {group.items.map((item) => (
               <li key={item.id}>
-                <time className="time" dateTime={item.time}>{clockTime(item.time)}</time>
-                <div>
-                  <span className="meta">
-                    <span className="publisher"><bdi>{item.publisher_ar ?? item.publisher}</bdi></span>
-                  </span>
-                  <Headline item={item} />
-                  <Copies copies={item.copies} />
-                </div>
+                {/* One line per story: time, publisher, headline (wraps only when it does not fit) */}
+                <time className="time" dateTime={item.time}>{clockTime(item.time)}</time>{" "}
+                <span className="publisher"><bdi>{item.publisher_ar ?? item.publisher}</bdi>:</span>{" "}
+                <Headline item={item} />
+                <Copies copies={item.copies} />
               </li>
             ))}
           </ol>
