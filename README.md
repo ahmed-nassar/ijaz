@@ -46,33 +46,27 @@ collector status --hours 24        # per-feed report, article counts, open alert
 
 ## Deploying (Fly.io + Neon)
 
-The collector runs on Fly.io as one always-on worker machine (`fly.toml`), with Postgres 18 on Neon. Each deploy first runs `collector init-db && collector load-sources sources/sources.yaml` as the release command, then starts `collector -v run`.
+Everything runs as one Fly.io app, `ijaz` (`fly.toml`, `Dockerfile`), with Postgres 18 on Neon. One image holds both parts and runs as two process groups with one machine each:
+
+| Group | Runs | Machine |
+| --- | --- | --- |
+| `web` | The River page at https://ijaz.fly.dev (Next.js on port 8080) and its read API (FastAPI on 127.0.0.1:8000, not reachable from outside). `/` redirects to `/river` until the homepage exists | Stops when the site is idle and starts on the next visit |
+| `collector` | `collector -v run` | Always on, no web traffic |
+
+Each deploy first runs `collector init-db && collector load-sources sources/sources.yaml` as the release command, so new tables and indexes exist before the new code starts.
 
 ```
-fly apps create ijaz-collector
-fly secrets set -a ijaz-collector \
+fly secrets set -a ijaz \
   DATABASE_URL='postgresql://USER:PASSWORD@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require' \
   COLLECTOR_USER_AGENT='SiteName/0.1 (+https://site.example/about-our-crawler)'
-fly deploy
-fly scale count 1 -a ijaz-collector   # exactly one worker
-fly logs -a ijaz-collector
+fly deploy --ha=false
+fly scale count web=1 collector=1 -a ijaz
+fly logs -a ijaz
 ```
 
 Use Neon's direct connection string (host without `-pooler`).
 
-`fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the worker polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
-
-### The website (River page)
-
-The River page and its read API run together as a second Fly app, `ijaz`, at https://ijaz.fly.dev (`fly.web.toml`, `Dockerfile.web`). One machine runs the API on 127.0.0.1:8000 (not reachable from outside) and the Next.js server on port 8080. `/` redirects to `/river` until the homepage exists. The machine stops when the site is idle and starts on the next visit, so neither it nor Neon runs while nobody is reading.
-
-```
-fly apps create ijaz
-fly secrets set -a ijaz DATABASE_URL='<the same Neon string as the collector>'
-fly deploy -c fly.web.toml
-```
-
-Deploy the collector from the same commit first: its release command creates the River's database index.
+`fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the collector polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
 
 ## Tests
 

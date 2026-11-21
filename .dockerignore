@@ -7,3 +7,7 @@ build
 *.db
 .env
 tests
+web/node_modules
+web/.next
+web/public/fonts
+web/lib/font-face.generated.ts
