@@ -128,6 +128,8 @@ fly ssh console -a ijaz -s -C "collector stories-eval" > stories-report.txt
 
 It prints precision and recall at each threshold (targets: 95% and 85%), the best results for words alone and meaning alone, the pairs it got wrong, the language model's output for the 20 largest stories, and the cost. `--json` prints everything as JSON; `--enrich N` changes how many stories go to the language model.
 
+`collector stories-eval --compare` measures the agreed design next to candidate fixes on the same answer key: `text-embedding-3-large` and `qwen/qwen3-embedding-8b`, no word weight for pairs in different languages, and a Gemini judge that decides matches in the uncertain band. Each row shows precision, recall, recall across languages and cost per 1,000 articles.
+
 ## Not in this increment
 
 Storing stories, ranking, the homepage, search, GDELT and Google News discovery, Scrapy for outlets without feeds, Bluesky, and database migrations (Alembic arrives once the schema settles; for now `init-db` creates tables).

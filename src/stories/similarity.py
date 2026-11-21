@@ -37,3 +37,12 @@ def _cosine(m: np.ndarray) -> np.ndarray:
     norms[norms == 0] = 1.0
     unit = m / norms
     return unit @ unit.T
+
+
+def combine_by_language(word: np.ndarray, meaning: np.ndarray, languages: list[str], same_weight: float, cross_weight: float) -> np.ndarray:
+    """Like ``combine``, with a separate word weight for pairs in different languages,
+    where shared words are rare (names and numbers at most)."""
+    lang = np.asarray(languages)
+    same = lang[:, None] == lang[None, :]
+    weight = np.where(same, same_weight, cross_weight)
+    return weight * word + (1.0 - weight) * meaning

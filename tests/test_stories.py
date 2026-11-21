@@ -43,7 +43,9 @@ class FakeOpenRouter:
             data = [{"index": i, "embedding": fake_vector(t)} for i, t in enumerate(body["input"])]
             return httpx.Response(200, json={"data": data, "usage": {"prompt_tokens": 10 * len(data), "cost": 0.00001 * len(data)}})
         schema = body["response_format"]["json_schema"]["name"]
-        if schema == "story":
+        if schema == "judge":
+            content = {"match": 1}
+        elif schema == "story":
             content = {"headline_ar": "عنوان", "importance": 3, "importance_reason": "test", "event_date": None, "translations": []}
         else:
             content = {"ok": True, "issues": []}
@@ -173,3 +175,65 @@ def test_answer_key_is_consistent():
         assert set(ids) <= articles, name
         assert not seen & set(ids), name
         seen |= set(ids)
+
+
+def test_cross_language_pairs_can_ignore_words():
+    from stories.similarity import combine_by_language
+
+    word = np.array([[1.0, 0.4, 0.0], [0.4, 1.0, 0.0], [0.0, 0.0, 1.0]])
+    meaning = np.array([[1.0, 0.6, 0.8], [0.6, 1.0, 0.8], [0.8, 0.8, 1.0]])
+    m = combine_by_language(word, meaning, ["en", "en", "ar"], 0.5, 0.0)
+    assert m[0, 1] == 0.5  # same language: half and half
+    assert m[0, 2] == 0.8  # across languages: meaning alone
+
+
+def test_judge_decides_only_the_uncertain_band():
+    from stories.grouping import group_with_judge
+
+    items = [Item(i, T0 + timedelta(minutes=i)) for i in range(4)]
+    score = np.array([
+        [1, .9, .4, .1],
+        [.9, 1, .4, .1],
+        [.4, .4, 1, .1],
+        [.1, .1, .1, 1],
+    ])
+    asked = []
+
+    def judge(i, candidates):
+        asked.append((i, [list(c) for c in candidates]))
+        return 0
+
+    groups = group_with_judge(items, score, low=0.3, high=0.8, judge=judge)
+    assert groups == [[0, 1, 2], [3]]
+    assert asked == [(2, [[0, 1]])]  # 1 joined on score alone; 3 is below the band
+    assert group_with_judge(items, score, 0.3, 0.8, lambda i, c: None) == [[0, 1], [2], [3]]
+
+
+def test_judge_call_maps_the_answer_to_a_candidate():
+    from stories.enrich import judge
+
+    fake = FakeOpenRouter()
+    r = Report(1, "aa-en", "en", "2026-11-21 08:00", "Basra fire kills four", None)
+    assert judge(client(fake), r, [[r], [r]]) == 0
+    body = fake.requests[0]["body"]
+    assert body["response_format"]["json_schema"]["name"] == "judge"
+    assert "Candidate story 2" in body["messages"][1]["content"]
+
+
+def test_comparison_end_to_end(sessions, tmp_path):
+    from stories.evaluate import compare, render_compare
+
+    with sessions() as s:
+        seed(s, 40, now=T0)
+        articles = s.query(Article).all()
+    by_title = defaultdict(list)
+    for a in articles:
+        by_title[a.title].append(a.id)
+    groups = {f"g{i}": ids for i, ids in enumerate(v for v in by_title.values() if len(v) > 1)}
+    gold = tmp_path / "gold.json"
+    gold.write_text(json.dumps({"articles": [a.id for a in articles], "groups": groups}))
+    report = compare(sessions, str(gold), client=client(FakeOpenRouter()), models=["openai/text-embedding-3-small", "qwen/qwen3-embedding-8b"])
+    variants = [r["variant"] for r in report["rows"]]
+    assert len(variants) == 7 and "Gemini judge" in variants[-1]
+    assert "agreed design" in variants[0]
+    assert "per 1,000 articles" in render_compare(report)

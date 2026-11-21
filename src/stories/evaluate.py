@@ -18,7 +18,7 @@ from collector.models import Article, Publisher
 
 from .config import StorySettings
 from .enrich import Report, enrich
-from .grouping import Item, group
+from .grouping import Item, group, group_with_judge
 from .openrouter import OpenRouter
 from .similarity import combine, embedding_similarity, word_similarity
 from .text import article_words, embedding_text
@@ -204,4 +204,112 @@ def render(report: dict) -> str:
         f"Estimated per 1,000 articles: embeddings ${c['embedding_per_1000_articles_usd']:.4f}, "
         f"language model ${c['llm_per_1000_articles_usd']:.3f} (each story written once)",
     ]
+    return "\n".join(lines)
+
+
+COMPARE_MODELS = ["openai/text-embedding-3-small", "openai/text-embedding-3-large", "qwen/qwen3-embedding-8b"]
+
+
+def compare(sessions, gold_path: str, settings: StorySettings | None = None, client: OpenRouter | None = None,
+            models: list[str] | None = None) -> dict:
+    """Measure the agreed design next to the candidate fixes, on the same answer key:
+    stronger embedding models, no word weight across languages, and a Gemini judge
+    for uncertain matches. Every row reports precision, recall and cost."""
+    from dataclasses import replace
+
+    from .enrich import judge as judge_call
+    from .similarity import combine_by_language
+
+    settings = settings or StorySettings()
+    gold = load_gold(gold_path)
+    rows = load_rows(sessions, gold["articles"])
+    if len(rows) != len(gold["articles"]):
+        raise SystemExit("some answer-key articles are not in this database")
+    by_id = {r.id: r for r in rows}
+    gold_pairs = pairs(list(gold["groups"].values()))
+    cross = {p for p in gold_pairs if by_id[p[0]].language != by_id[p[1]].language}
+    items = [Item(r.id, r.time) for r in rows]
+    langs = [r.language for r in rows]
+    thresholds = list(np.arange(0.20, 0.801, 0.025))
+    word = word_similarity([article_words(r.title, r.excerpt) for r in rows])
+    texts = [embedding_text(r.title, r.excerpt) for r in rows]
+    n = len(rows)
+
+    out: list[dict] = []
+    matrices: dict[str, np.ndarray] = {}
+
+    def add(name, matrix, model, emb_cost):
+        best = choose(sweep(items, matrix, gold_pairs, settings.window_hours, thresholds))
+        predicted = pairs(best["groups"])
+        out.append({"variant": name, "model": model, "threshold": best["threshold"], "precision": best["precision"],
+                    "recall": best["recall"], "cross_language_recall": scores(predicted, cross)[1] if cross else None,
+                    "llm_calls": 0, "cost_per_1000_usd": emb_cost / n * 1000})
+        matrices[name] = matrix
+
+    for model in models or COMPARE_MODELS:
+        c = client or OpenRouter(replace(settings, embedding_model=model))
+        if client is not None:
+            c.settings = replace(settings, embedding_model=model)
+        before = c.embedding_usage.cost_usd
+        try:
+            meaning = embedding_similarity(c.embed(texts))
+        except Exception as e:
+            out.append({"variant": "error", "model": model, "error": str(e)[:200]})
+            continue
+        cost = c.embedding_usage.cost_usd - before
+        short = model.split("/")[-1]
+        add(f"{short}: words 0.5, meaning 0.5 (agreed design)" if model == settings.embedding_model else f"{short}: words 0.5, meaning 0.5",
+            combine(word, meaning, 0.5), model, cost)
+        add(f"{short}: words 0.5 same language, 0 across languages", combine_by_language(word, meaning, langs, 0.5, 0.0), model, cost)
+        add(f"{short}: meaning only", meaning, model, cost)
+
+    ok = [r for r in out if "error" not in r and r["precision"] >= PRECISION_TARGET]
+    judged = None
+    if ok:
+        base = max(ok, key=lambda r: r["recall"])
+        matrix = matrices[base["variant"]]
+        high = base["threshold"]
+        low = max(0.2, high - 0.25)
+        c = client or OpenRouter(replace(settings, embedding_model=base["model"]))
+        before_cost, before_calls = c.llm_usage.cost_usd, c.llm_usage.calls
+
+        def report(i):
+            r = rows[i]
+            return Report(r.id, r.publisher, r.language, r.time.strftime("%Y-%m-%d %H:%M"), r.title, r.excerpt)
+
+        def ask(i, candidates):
+            try:
+                return judge_call(c, report(i), [[report(m) for m in story] for story in candidates])
+            except Exception:
+                return None
+
+        groups = group_with_judge(items, matrix, low, high, ask, settings.window_hours)
+        p, r, _ = scores(pairs(groups), gold_pairs)
+        calls = c.llm_usage.calls - before_calls
+        judged = {"variant": f"{base['variant']} + Gemini judge between {low:.3f} and {high:.3f}", "model": base["model"],
+                  "threshold": high, "precision": p, "recall": r,
+                  "cross_language_recall": scores(pairs(groups), cross)[1] if cross else None,
+                  "llm_calls": calls,
+                  "cost_per_1000_usd": base["cost_per_1000_usd"] + (c.llm_usage.cost_usd - before_cost) / n * 1000,
+                  "wrongly_joined": [[by_id[a].title, by_id[b].title] for a, b in sorted(pairs(groups) - gold_pairs)][:15],
+                  "missed": [[by_id[a].title, by_id[b].title] for a, b in sorted(gold_pairs - pairs(groups))][:15]}
+        out.append(judged)
+    return {"articles": n, "gold_pairs": len(gold_pairs), "cross_language_gold_pairs": len(cross), "rows": out}
+
+
+def render_compare(report: dict) -> str:
+    lines = [f"Answer key: {report['articles']} articles, {report['gold_pairs']} same-story pairs "
+             f"({report['cross_language_gold_pairs']} across languages). Targets: precision {PRECISION_TARGET:.0%}, recall {RECALL_TARGET:.0%}.",
+             "Each row uses the threshold with the highest recall at precision 95% or more (or the best balance if none reaches 95%).", ""]
+    for r in report["rows"]:
+        if "error" in r:
+            lines.append(f"{r['model']}: could not run ({r['error']})")
+            continue
+        x = f"{r['cross_language_recall']:.0%}" if r["cross_language_recall"] is not None else "n/a"
+        lines.append(f"{r['variant']}\n    threshold {r['threshold']}: precision {r['precision']:.1%}, recall {r['recall']:.1%}, "
+                     f"across languages {x}; {r['llm_calls']} judge calls; ${r['cost_per_1000_usd']:.3f} per 1,000 articles")
+    judged = report["rows"][-1] if report["rows"] and "wrongly_joined" in report["rows"][-1] else None
+    if judged:
+        lines += ["", "With the judge, wrongly joined (first 15):"] + [f"  {a}\n    + {b}" for a, b in judged["wrongly_joined"]]
+        lines += ["", "With the judge, missed (first 15):"] + [f"  {a}\n    + {b}" for a, b in judged["missed"]]
     return "\n".join(lines)
