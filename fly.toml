@@ -9,7 +9,7 @@
 # Secrets (set with `fly secrets set -a ijaz`, never in this file):
 #   DATABASE_URL          Neon connection string (direct endpoint, not -pooler)
 #   COLLECTOR_USER_AGENT  e.g. "SiteName/0.1 (+https://site.example/about-our-crawler)"
-#   ANTHROPIC_API_KEY     for the story worker (spec section 15), once it exists
+#   IJAZ_OPENROUTER_KEY   OpenRouter key for the story work (spec section 15)
 
 app = "ijaz"
 primary_region = "fra"

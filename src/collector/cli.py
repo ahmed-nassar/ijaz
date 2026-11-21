@@ -1,4 +1,4 @@
-"""Command line: collector init-db | load-sources | poll | run | status | vet | export-articles"""
+"""Command line: collector init-db | load-sources | poll | run | status | vet | export-articles | stories-eval"""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import json
 import logging
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 
@@ -41,6 +42,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", required=True)
     p = sub.add_parser("export-articles", help="print collected articles as JSON lines (headline, excerpt, link; no body text)")
     p.add_argument("--days", type=int, default=14)
+    p = sub.add_parser("stories-eval", help="measure story grouping against the answer key (needs IJAZ_OPENROUTER_KEY)")
+    p.add_argument("gold", nargs="?", default=os.environ.get("STORIES_GOLD", "eval/stories_gold.json"))
+    p.add_argument("--enrich", type=int, default=20, help="run the language model on this many of the largest stories")
+    p.add_argument("--json", action="store_true", help="print the full report as JSON")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
@@ -61,6 +66,12 @@ def main(argv: list[str] | None = None) -> int:
         return _status(sessions, args.hours)
     if args.command == "export-articles":
         return _export_articles(sessions, args.days)
+    if args.command == "stories-eval":
+        from stories.evaluate import render, run
+
+        report = run(sessions, args.gold, enrich_count=args.enrich)
+        print(json.dumps(report, ensure_ascii=False, indent=1, default=str) if args.json else render(report))
+        return 0
 
     async def with_fetcher(fn):
         fetcher = Fetcher(settings)
