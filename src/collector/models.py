@@ -17,6 +17,8 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    case,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -141,3 +143,31 @@ class Alert(Base):
     source_id: Mapped[int | None] = mapped_column(ForeignKey("source.id"))
     message: Mapped[str] = mapped_column(Text)
     resolved: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+def river_time():
+    """When an article is shown as published on the River.
+
+    The publisher's own time, unless it is missing or later than when we collected the
+    article (some feeds carry future or wrong dates); then the collection time.
+    """
+    return case(
+        (
+            (Article.published_at.is_not(None)) & (Article.published_at < Article.fetched_at),
+            Article.published_at,
+        ),
+        else_=Article.fetched_at,
+    )
+
+
+# Keyset pagination for the River: newest first, first reports only (copies fold under them).
+# The expression is written out in parentheses because PostgreSQL requires them in an index
+# and SQLAlchemy drops a Grouping. Keep it identical to river_time() so the planner uses it.
+Index(
+    "ix_article_river",
+    text("(CASE WHEN (published_at IS NOT NULL AND published_at < fetched_at) THEN published_at ELSE fetched_at END)"),
+    Article.id,
+    postgresql_where=Article.syndicated_of_id.is_(None),
+    sqlite_where=Article.syndicated_of_id.is_(None),
+)
+Index("ix_article_syndicated_of", Article.syndicated_of_id)
