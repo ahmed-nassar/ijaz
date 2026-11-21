@@ -25,7 +25,13 @@ header.site .wrap{display:flex;align-items:baseline;justify-content:space-betwee
 .tagline{color:var(--faint);font-size:.8rem;margin:0}
 .bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem 1rem;margin-block:1.5rem .5rem}
 h1{font-size:1rem;font-weight:600;margin:0}
-form.filters{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+details.filter-toggle summary{font-size:.8rem;color:var(--muted);cursor:pointer;list-style:none}
+details.filter-toggle summary::-webkit-details-marker{display:none}
+details.filter-toggle summary::after{content:" ▾";font-size:.7em}
+details.filter-toggle[open]{flex-basis:100%}
+details.filter-toggle[open] summary{text-align:end}
+details.filter-toggle[open] summary::after{content:" ▴"}
+form.filters{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-block-start:.6rem}
 form.filters select{font:inherit;font-size:.8rem;color:var(--muted);background:var(--bg);border:1px solid var(--rule);border-radius:999px;
   padding:.2rem .7rem;max-inline-size:11rem}
 form.filters button{font:inherit;font-size:.8rem;color:var(--text);background:none;border:1px solid var(--muted);border-radius:999px;padding:.2rem .8rem;cursor:pointer}

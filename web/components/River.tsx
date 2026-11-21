@@ -102,6 +102,9 @@ function FilterForm({ options, filters }: { options: FilterOptions | null; filte
   if (!options) return null;
   const active = Boolean(filters.lang || filters.country || filters.publisher);
   return (
+    // Folded away by default (no JavaScript: <details>); open when a filter is in use.
+    <details className="filter-toggle" open={active}>
+    <summary>تصفية</summary>
     <form className="filters" method="get" action="/river" aria-label="تصفية الأخبار">
       <label>
         <span className="sr-only">اللغة</span>
@@ -136,6 +139,7 @@ function FilterForm({ options, filters }: { options: FilterOptions | null; filte
       <button type="submit">عرض</button>
       {active && <a className="reset" href="/river">إلغاء التصفية</a>}
     </form>
+    </details>
   );
 }
 
