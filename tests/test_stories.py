@@ -60,7 +60,19 @@ def client(fake: FakeOpenRouter) -> OpenRouter:
 
 def test_words_keep_numbers_and_drop_single_letters():
     assert words("Fire at Iraq's Basra power station kills 4") == ["fire", "at", "iraq", "basra", "power", "station", "kills", "4"]
-    assert words("حريق في محطة كهرباء البصرة") == ["حريق", "في", "محطة", "كهرباء", "البصرة"]
+    assert words("حريق في محطة كهرباء البصرة") == ["حريق", "في", "محطه", "كهرباء", "بصره"]
+
+
+def test_arabic_spellings_and_attached_particles_match():
+    # alef forms, ta marbuta, alef maqsura, hamza carriers, diacritics, tatweel
+    assert words("أسعار") == words("اسعار") == words("إسعار")
+    assert words("القاهرة") == words("قاهره") and words("مستشفى") == words("مستشفي")
+    assert words("مسؤول") == words("مسوول") and words("الذهبُ") == words("الذهب") and words("الـذهب") == words("الذهب")
+    # a leading article or particle goes; three letters always stay
+    assert words("الذهب") == words("وبالذهب") == words("ذهب") == ["ذهب"]
+    assert words("ولد") == ["ولد"] and words("بلد") == ["بلد"]
+    # Arabic-Indic digits match Western ones; Latin words are untouched
+    assert words("زلزال بقوة ٦٫٨") == words("زلزال بقوة 6.8") and words("Basra") == ["basra"]
 
 
 def test_headline_counts_twice_and_only_headline_and_excerpt_are_sent():
