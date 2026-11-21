@@ -1,29 +1,53 @@
-# Fly.io config for the news collector: one always-on background worker.
-# It has no HTTP server, so there is no [http_service], no health check and no
-# auto-stop. Secrets (set with `fly secrets set`, never in this file):
+# Fly.io config for the whole project: one app, `ijaz`, at https://ijaz.fly.dev
+# Deploy from the repository root with:  fly deploy
+#
+# Process groups, one machine each (all from the same image, see Dockerfile):
+#   web        the River page and its read API. Stops when nobody has visited for a few
+#              minutes and starts on the next visit, so it costs nothing while idle.
+#   collector  the feed collector. Always on, no web traffic.
+#
+# Secrets (set with `fly secrets set -a ijaz`, never in this file):
 #   DATABASE_URL          Neon connection string (direct endpoint, not -pooler)
 #   COLLECTOR_USER_AGENT  e.g. "SiteName/0.1 (+https://site.example/about-our-crawler)"
+#   ANTHROPIC_API_KEY     for the story worker (spec section 15), once it exists
 
-app = "ijaz-collector"
+app = "ijaz"
 primary_region = "fra"
 
 [build]
   dockerfile = "Dockerfile"
 
+[processes]
+  web = "sh ./start-web.sh"
+  collector = "collector -v run"
+
 [env]
-  # Poll in 20-minute rounds so Neon's compute can scale to zero between them
-  # (about 55 compute hours a month instead of ~180; the free plan allows 100).
+  # Collector only: poll in 20-minute rounds so Neon's compute can scale to zero
+  # between them. The website ignores it.
   COLLECTOR_ROUND_MINUTES = "20"
 
 [deploy]
-  # Runs once per deploy in a temporary machine, before the worker is replaced.
-  # Both steps are idempotent: tables are created if missing, sources are upserted.
+  # Runs once per deploy in a temporary machine, before any machine is replaced.
+  # Both steps are idempotent: tables and indexes are created if missing, sources are upserted.
   release_command = "sh -c 'collector init-db && collector load-sources sources/sources.yaml'"
-  strategy = "immediate"
+
+[http_service]
+  processes = ["web"]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 100
+    hard_limit = 200
 
 [[restart]]
   policy = "always"
+  processes = ["collector"]
 
 [[vm]]
   size = "shared-cpu-1x"
   memory = "512mb"
+  processes = ["web", "collector"]
