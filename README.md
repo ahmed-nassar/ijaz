@@ -66,6 +66,8 @@ fly logs -a ijaz
 
 Use Neon's direct connection string (host without `-pooler`).
 
+After the first manual deploy, merging a pull request into `main` deploys automatically (`.github/workflows/deploy.yml`). It needs one repository secret, `FLY_API_TOKEN`: run `fly tokens create deploy -a ijaz` and add the output under the repository's Settings, Secrets and variables, Actions. Keep the collector at one machine, since a second would poll every feed twice.
+
 `fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the collector polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
 
 ## Tests
