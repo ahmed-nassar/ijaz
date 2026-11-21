@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass, field
 
 import httpx
+import numpy as np
 
 from .config import StorySettings
 
@@ -63,13 +64,16 @@ class OpenRouter:
             return r.json()
         raise OpenRouterError(f"{path}: gave up after retries")
 
-    def embed(self, texts: list[str], batch: int = 100, model: str | None = None) -> list[list[float]]:
-        out: list[list[float]] = []
+    def embed(self, texts: list[str], batch: int = 100, model: str | None = None) -> list[np.ndarray]:
+        """One float32 vector per text. Converted batch by batch: a 4,096-number vector
+        takes 16 KB this way and about 130 KB as a Python list."""
+        out: list[np.ndarray] = []
         for start in range(0, len(texts), batch):
             data = self._post("/embeddings", {"model": model or self.settings.embedding_model, "input": texts[start:start + batch]})
             self.embedding_usage.add(data.get("usage"))
             rows = sorted(data["data"], key=lambda d: d["index"])
-            out.extend(row["embedding"] for row in rows)
+            out.extend(np.asarray(row["embedding"], dtype=np.float32) for row in rows)
+            del data, rows
         return out
 
     def chat_json(self, system: str, user: str, schema_name: str, schema: dict) -> dict:

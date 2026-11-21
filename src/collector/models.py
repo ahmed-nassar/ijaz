@@ -204,6 +204,18 @@ class HomepageSnapshot(Base):
     stories: Mapped[list] = mapped_column(JSON)  # [{story_id, rank, score, parts: {...}}]
 
 
+class WorkerLease(Base):
+    """Which worker machine does a recurring job. With two workers, the one holding the
+    lease polls feeds and runs the story step; the other stands by and takes over once
+    the lease expires (its holder stopped renewing it)."""
+
+    __tablename__ = "worker_lease"
+
+    name: Mapped[str] = mapped_column(String(50), primary_key=True)
+    holder: Mapped[str] = mapped_column(String(100))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 def river_time():
     """When an article is shown as published on the River.
 

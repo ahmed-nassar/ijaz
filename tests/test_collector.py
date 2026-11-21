@@ -230,3 +230,32 @@ def test_round_minutes_setting(monkeypatch):
     assert get_settings().round_minutes == 0
     monkeypatch.setenv("COLLECTOR_ROUND_MINUTES", "20")
     assert get_settings().round_minutes == 20
+
+
+def test_lease_one_worker_at_a_time_and_takeover_after_expiry(sessions):
+    from datetime import datetime, timedelta, timezone
+
+    from collector.lease import claim, holder
+
+    t = datetime(2026, 11, 21, 12, tzinfo=timezone.utc)
+    assert claim(sessions, "rounds", "a", 2460, now=t)
+    assert not claim(sessions, "rounds", "b", 2460, now=t + timedelta(minutes=1))
+    assert claim(sessions, "rounds", "a", 2460, now=t + timedelta(minutes=20))  # renewal
+    assert not claim(sessions, "rounds", "b", 2460, now=t + timedelta(minutes=40))
+    # a stopped renewing: b takes over once the lease runs out
+    assert claim(sessions, "rounds", "b", 2460, now=t + timedelta(minutes=62))
+    assert holder(sessions, "rounds")[0] == "b"
+
+
+def test_standby_worker_polls_nothing_and_skips_the_story_step(settings, sessions, web):
+    from collector.scheduler import run_rounds
+
+    agency_web(web)
+    add_source(sessions, "agency-ar", "https://agency.example/rss", "agency")
+    steps, released = [], []
+    run(run_rounds(make_collector(settings, sessions, web), 20 * 60, lambda: released.append(1), rounds=1,
+                   after_round=lambda: steps.append(1), claim=lambda: False))
+    assert web.urls() == [] and steps == [] and released == [1]
+    run(run_rounds(make_collector(settings, sessions, web), 20 * 60, lambda: released.append(1), rounds=1,
+                   after_round=lambda: steps.append(1), claim=lambda: True))
+    assert "https://agency.example/rss" in web.urls() and steps == [1]

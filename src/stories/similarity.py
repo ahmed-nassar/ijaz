@@ -10,18 +10,33 @@ import numpy as np
 
 def word_similarity(docs: list[list[str]]) -> np.ndarray:
     """Cosine similarity of TF-IDF vectors. Words common across the set weigh little,
-    so «اليوم» or «says» do not make two articles look alike."""
+    so «اليوم» or «says» do not make two articles look alike.
+
+    Words found in only one article count towards its vector length but cannot be
+    shared, so they are left out of the matrix: same result, a fraction of the memory
+    (most of a news vocabulary appears once)."""
     n = len(docs)
     df = Counter()
     for d in docs:
         df.update(set(d))
-    vocab = {w: i for i, w in enumerate(df)}
-    idf = np.array([math.log((1 + n) / (1 + df[w])) + 1 for w in vocab], dtype=np.float32)
-    m = np.zeros((n, len(vocab)), dtype=np.float32)
+    idf = {w: math.log((1 + n) / (1 + c)) + 1 for w, c in df.items()}
+    shared = {w: i for i, w in enumerate(w for w, c in df.items() if c > 1)}
+    m = np.zeros((n, len(shared)), dtype=np.float32)
+    norms = np.zeros(n, dtype=np.float64)
     for row, d in enumerate(docs):
         for w, c in Counter(d).items():
-            m[row, vocab[w]] = (1 + math.log(c)) * idf[vocab[w]]
-    return _cosine(m)
+            weight = (1 + math.log(c)) * idf[w]
+            norms[row] += weight * weight
+            col = shared.get(w)
+            if col is not None:
+                m[row, col] = weight
+    norms = np.sqrt(norms)
+    empty = norms == 0
+    norms[empty] = 1.0
+    m /= norms[:, None].astype(np.float32)
+    sim = m @ m.T
+    np.fill_diagonal(sim, np.where(empty, 0.0, 1.0))
+    return sim
 
 
 def embedding_similarity(vectors: list[list[float]]) -> np.ndarray:

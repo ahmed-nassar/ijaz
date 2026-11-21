@@ -1,11 +1,14 @@
 # Fly.io config for the whole project: one app, `ijaz`, at https://ijaz.fly.dev
 # Deploy from the repository root with:  fly deploy
 #
-# Process groups, one machine each (all from the same image, see Dockerfile):
-#   web        the River page and its read API. Stops when nobody has visited for a few
-#              minutes and starts on the next visit, so it costs nothing while idle.
-#   collector  the feed collector. Always on, no web traffic. After each round it also runs
-#              the story step (grouping, headlines, ranking, homepage snapshot); see README.
+# Process groups, two machines each (all from the same image, see Dockerfile):
+#   web     the website and its read API. Stops when nobody has visited for a few
+#           minutes and starts on the next visit, so it costs nothing while idle.
+#   worker  polls the feeds, then runs the story step (grouping, headlines, ranking,
+#           homepage snapshot); see README. Always on, no web traffic. Of two workers,
+#           one holds a lease in the database and does each round; the other stands by
+#           and takes over if the first stops renewing it.
+# Machine counts: fly scale count web=2 worker=2 -a ijaz (deploys keep them).
 #
 # Secrets (set with `fly secrets set -a ijaz`, never in this file):
 #   DATABASE_URL          Neon connection string (direct endpoint, not -pooler)
@@ -20,10 +23,10 @@ primary_region = "fra"
 
 [processes]
   web = "sh ./start-web.sh"
-  collector = "collector -v run"
+  worker = "collector -v run"
 
 [env]
-  # Collector only: poll in 20-minute rounds so Neon's compute can scale to zero
+  # Worker only: poll in 20-minute rounds so Neon's compute can scale to zero
   # between them. The website ignores it.
   COLLECTOR_ROUND_MINUTES = "20"
 
@@ -46,9 +49,9 @@ primary_region = "fra"
 
 [[restart]]
   policy = "always"
-  processes = ["collector"]
+  processes = ["worker"]
 
 [[vm]]
   size = "shared-cpu-1x"
   memory = "512mb"
-  processes = ["web", "collector"]
+  processes = ["web", "worker"]

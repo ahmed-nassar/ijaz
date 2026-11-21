@@ -46,12 +46,12 @@ collector status --hours 24        # per-feed report, article counts, open alert
 
 ## Deploying (Fly.io + Neon)
 
-Everything runs as one Fly.io app, `ijaz` (`fly.toml`, `Dockerfile`), with Postgres 18 on Neon. One image holds both parts and runs as two process groups with one machine each:
+Everything runs as one Fly.io app, `ijaz` (`fly.toml`, `Dockerfile`), with Postgres 18 on Neon. One image holds both parts and runs as two process groups with two machines each (shared-cpu-1x, 512 MB):
 
 | Group | Runs | Machine |
 | --- | --- | --- |
 | `web` | The River page at https://ijaz.fly.dev (Next.js on port 8080) and its read API (FastAPI on 127.0.0.1:8000, not reachable from outside). `/` redirects to `/river` until the homepage exists | Stops when the site is idle and starts on the next visit |
-| `collector` | `collector -v run` | Always on, no web traffic |
+| `worker` | `collector -v run`: polls feeds, then runs the story step. One worker holds a lease in the database and does each round; the other stands by and takes over within about 40 minutes if the first stops | Always on, no web traffic |
 
 Each deploy first runs `collector init-db && collector load-sources sources/sources.yaml` as the release command, so new tables and indexes exist before the new code starts.
 
@@ -60,13 +60,13 @@ fly secrets set -a ijaz \
   DATABASE_URL='postgresql://USER:PASSWORD@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require' \
   COLLECTOR_USER_AGENT='SiteName/0.1 (+https://site.example/about-our-crawler)'
 fly deploy --ha=false
-fly scale count web=1 collector=1 -a ijaz
+fly scale count web=2 worker=2 -a ijaz
 fly logs -a ijaz
 ```
 
 Use Neon's direct connection string (host without `-pooler`).
 
-After the first manual deploy, merging a pull request into `main` deploys automatically (`.github/workflows/deploy.yml`). It needs one repository secret, `FLY_API_TOKEN`: run `fly tokens create deploy -a ijaz` and add the output under the repository's Settings, Secrets and variables, Actions. Keep the collector at one machine, since a second would poll every feed twice.
+After the first manual deploy, merging a pull request into `main` deploys automatically (`.github/workflows/deploy.yml`). It needs one repository secret, `FLY_API_TOKEN`: run `fly tokens create deploy -a ijaz` and add the output under the repository's Settings, Secrets and variables, Actions. Two workers never poll twice: `collector status` shows which one holds the lease.
 
 `fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the collector polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
 
@@ -120,15 +120,15 @@ node web/scripts/measure-lcp.mjs http://localhost:3000        # LCP on slow 4G w
 - Both go through OpenRouter with the `IJAZ_OPENROUTER_KEY` secret. Only headlines and short excerpts are sent. Model names, the word weight and the threshold are environment settings (`STORIES_EMBEDDING_MODEL`, `STORIES_LLM_MODEL`, `STORIES_WORD_WEIGHT`, `STORIES_THRESHOLD`).
 - `eval/stories_gold.json` is the answer key: 471 articles from 21 Nov 2026, 03:00 to 11:38 UTC, with 64 stories of two or more reports. It holds article ids only; the articles are read from the production database.
 
-Run the measurement on Fly, where the key and the articles are:
+Run the measurement on Fly, where the key and the articles are. `fly console` starts a temporary machine from the current image, with the app's secrets, and removes it afterwards, so a long run neither competes with the worker for memory nor dies with it:
 
 ```
-fly ssh console -a ijaz -s -C "collector stories-eval" > stories-report.txt
+fly console -a ijaz --vm-memory 1024 -C "collector stories-eval" > stories-report.txt
 ```
 
 It prints precision and recall at each threshold (targets: 95% and 85%), the best results for words alone and meaning alone, the pairs it got wrong, the language model's output for the 20 largest stories, and the cost. `--json` prints everything as JSON; `--enrich N` changes how many stories go to the language model.
 
-`collector stories-eval --compare` measures the agreed design next to candidate fixes on the same answer key: `text-embedding-3-large` and `qwen/qwen3-embedding-8b`, no word weight for pairs in different languages, and a judge (Gemini 3.1 Flash Lite with two band widths, and Claude Haiku 5.5) that decides matches in the uncertain band. Each row shows precision, recall, recall across languages and cost per 1,000 articles.
+`collector stories-eval --compare` (same `fly console` command) prints each result as soon as it is ready, with progress in the terminal, so an interrupted run keeps what finished. It measures the agreed design next to candidate fixes on the same answer key: `text-embedding-3-large` and `qwen/qwen3-embedding-8b`, no word weight for pairs in different languages, and a judge (Gemini 3.1 Flash Lite with two band widths, and Claude Haiku 5.5) that decides matches in the uncertain band. Each row shows precision, recall, recall across languages and cost per 1,000 articles.
 
 ## Stories, part 2: the homepage (preview)
 
