@@ -112,3 +112,17 @@ def test_bad_input_is_rejected(client):
 def test_empty_river(client):
     body = client.get("/api/river").json()
     assert body == {"items": [], "next_cursor": None}
+
+
+def test_export_articles_writes_json_lines(sessions, capsys):
+    import json as _json
+
+    from collector.cli import _export_articles
+
+    with sessions() as s:
+        seed(s, 20, now=datetime.now(timezone.utc))
+    assert _export_articles(sessions, 14) == 0
+    lines = capsys.readouterr().out.strip().splitlines()
+    assert len(lines) == 20
+    row = _json.loads(lines[0])
+    assert {"id", "title", "excerpt", "url", "language", "publisher", "fetched_at"} <= row.keys()

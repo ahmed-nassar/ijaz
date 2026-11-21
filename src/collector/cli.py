@@ -1,9 +1,10 @@
-"""Command line: collector init-db | load-sources | poll | run | status | vet"""
+"""Command line: collector init-db | load-sources | poll | run | status | vet | export-articles"""
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import sys
 from datetime import datetime, timedelta, timezone
@@ -38,6 +39,8 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("vet", help="find and test feeds for candidate publishers")
     p.add_argument("candidates")
     p.add_argument("--out", required=True)
+    p = sub.add_parser("export-articles", help="print collected articles as JSON lines (headline, excerpt, link; no body text)")
+    p.add_argument("--days", type=int, default=14)
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
@@ -56,6 +59,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "status":
         return _status(sessions, args.hours)
+    if args.command == "export-articles":
+        return _export_articles(sessions, args.days)
 
     async def with_fetcher(fn):
         fetcher = Fetcher(settings)
@@ -136,3 +141,38 @@ def _status(sessions, hours: int) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def _export_articles(sessions, days: int) -> int:
+    """Articles fetched in the last ``days`` days, oldest first, one JSON object per line.
+
+    Used to build the clustering test set (spec section 15). It holds only what the
+    database holds: headline, capped excerpt, link and metadata, never article text.
+    """
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    query = (
+        select(Article, Publisher.slug, Publisher.country, Publisher.owner_group)
+        .join(Publisher, Publisher.id == Article.publisher_id)
+        .where(Article.fetched_at >= since)
+        .order_by(Article.fetched_at, Article.id)
+    )
+    count = 0
+    with sessions() as session:
+        for article, slug, country, owner in session.execute(query).yield_per(1000):
+            row = {
+                "id": article.id,
+                "publisher": slug,
+                "country": country,
+                "owner_group": owner,
+                "language": article.language,
+                "title": article.title,
+                "excerpt": article.excerpt,
+                "url": article.canonical_url,
+                "published_at": article.published_at.isoformat() if article.published_at else None,
+                "fetched_at": article.fetched_at.isoformat(),
+                "syndicated_of_id": article.syndicated_of_id,
+            }
+            sys.stdout.write(json.dumps(row, ensure_ascii=False) + "\n")
+            count += 1
+    print(f"exported {count} articles", file=sys.stderr)
+    return 0
