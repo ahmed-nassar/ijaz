@@ -37,3 +37,11 @@ test("Latin names, figures and symbols are split out of Arabic headlines", () =>
   const text = "قمة Gulf Summit 2026: نتائج";
   assert.equal(splitRuns(text).map((r) => r.text).join(""), text);
 });
+
+test("story times show the weekday when not today, and report counts agree in number", async () => {
+  const { storyTime, reportsLabel } = await import("./format.ts");
+  const now = new Date("2026-11-21T12:00:00Z");
+  assert.equal(storyTime("2026-11-21T11:05:00Z", now), "14:05");
+  assert.match(storyTime("2026-11-20T11:05:00Z", now), /^الجمعة 14:05$/);
+  assert.deepEqual([1, 2, 3, 10, 11].map(reportsLabel), ["تقرير واحد", "تقريران", "3 تقارير", "10 تقارير", "11 تقريرًا"]);
+});

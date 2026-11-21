@@ -68,3 +68,21 @@ const RTL_LANGUAGES = new Set(["ar", "fa", "ur", "he", "ckb"]);
 export function isRtl(language: string): boolean {
   return RTL_LANGUAGES.has(language);
 }
+
+const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
+const weekday = new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE, weekday: "long" });
+
+/** "14:05" for today (UTC+3), "الجمعة 14:05" for an earlier day. */
+export function storyTime(iso: string, now: Date = new Date()): string {
+  const date = new Date(iso);
+  if (dayKey.format(date) === dayKey.format(now)) return clockTime(iso);
+  return `${weekday.format(date)} ${clockTime(iso)}`;
+}
+
+/** "تقرير واحد", "تقريران", "3 تقارير" … "10 تقارير", "11 تقريرًا" (Arabic number agreement). */
+export function reportsLabel(n: number): string {
+  if (n === 1) return "تقرير واحد";
+  if (n === 2) return "تقريران";
+  if (n >= 3 && n <= 10) return `${n} تقارير`;
+  return `${n} تقريرًا`;
+}

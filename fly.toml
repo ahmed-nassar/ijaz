@@ -4,7 +4,8 @@
 # Process groups, one machine each (all from the same image, see Dockerfile):
 #   web        the River page and its read API. Stops when nobody has visited for a few
 #              minutes and starts on the next visit, so it costs nothing while idle.
-#   collector  the feed collector. Always on, no web traffic.
+#   collector  the feed collector. Always on, no web traffic. After each round it also runs
+#              the story step (grouping, headlines, ranking, homepage snapshot); see README.
 #
 # Secrets (set with `fly secrets set -a ijaz`, never in this file):
 #   DATABASE_URL          Neon connection string (direct endpoint, not -pooler)

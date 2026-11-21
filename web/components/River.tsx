@@ -8,8 +8,8 @@ import { STYLES } from "../lib/styles";
 // Placeholder until branding is decided (spec section 14).
 export const SITE_NAME = process.env.SITE_NAME ?? "إيجاز";
 
-const LANGUAGE_LABEL: Record<string, string> = { en: "EN", tr: "TR", fr: "FR" };
-const languageNames = new Intl.DisplayNames(["ar"], { type: "language" });
+export const LANGUAGE_LABEL: Record<string, string> = { en: "EN", tr: "TR", fr: "FR" };
+export const languageNames = new Intl.DisplayNames(["ar"], { type: "language" });
 const regionNames = new Intl.DisplayNames(["ar"], { type: "region" });
 
 export function riverHref(filters: Filters, cursor?: string): string {
@@ -20,14 +20,25 @@ export function riverHref(filters: Filters, cursor?: string): string {
   return query ? `/river?${query}` : "/river";
 }
 
-function Document({ title, children }: { title: string; children: ReactNode }) {
+const RIVER_FOOTER = "العناوين والروابط ملك ناشريها. نعرض العنوان ورابط المقال الأصلي فقط، والأوقات بتوقيت مكة المكرمة (UTC+3).";
+const RIVER_DESCRIPTION = "كل الأخبار التي جمعناها من الناشرين، الأحدث أولاً، مع روابط إلى المصادر الأصلية.";
+
+export function Document({ title, children, description = RIVER_DESCRIPTION, noindex = false, home = "/river", footer = RIVER_FOOTER }: {
+  title: string;
+  children: ReactNode;
+  description?: string;
+  noindex?: boolean;
+  home?: string;
+  footer?: string;
+}) {
   return (
     <html lang="ar" dir="rtl">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
-        <meta name="description" content="كل الأخبار التي جمعناها من الناشرين، الأحدث أولاً، مع روابط إلى المصادر الأصلية." />
+        <meta name="description" content={description} />
+        {noindex && <meta name="robots" content="noindex" />}
         <link rel="preload" href="/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
         <style dangerouslySetInnerHTML={{ __html: FONT_FACE + STYLES }} />
       </head>
@@ -35,15 +46,13 @@ function Document({ title, children }: { title: string; children: ReactNode }) {
         <a className="skip" href="#main">انتقل إلى المحتوى</a>
         <header className="site">
           <div className="wrap">
-            <a className="brand" href="/river">{SITE_NAME}</a>
+            <a className="brand" href={home}>{SITE_NAME}</a>
             <p className="tagline">أخبار الشرق الأوسط من مصادرها</p>
           </div>
         </header>
         <main id="main" className="wrap">{children}</main>
         <footer className="site">
-          <div className="wrap">
-            العناوين والروابط ملك ناشريها. نعرض العنوان ورابط المقال الأصلي فقط، والأوقات بتوقيت مكة المكرمة (UTC+3).
-          </div>
+          <div className="wrap">{footer}</div>
         </footer>
       </body>
     </html>
@@ -51,7 +60,7 @@ function Document({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** Arabic text with each Latin name or figure isolated, so it cannot reorder its neighbours. */
-function ArabicText({ text }: { text: string }) {
+export function ArabicText({ text }: { text: string }) {
   return (
     <>
       {splitRuns(text).map((run, i) =>
@@ -61,7 +70,7 @@ function ArabicText({ text }: { text: string }) {
   );
 }
 
-function Headline({ item }: { item: Item }) {
+export function Headline({ item }: { item: Item }) {
   const rtl = isRtl(item.language);
   const label = LANGUAGE_LABEL[item.language] ?? (rtl ? null : item.language.toUpperCase());
   return (
@@ -79,7 +88,7 @@ function Headline({ item }: { item: Item }) {
   );
 }
 
-function Copies({ copies }: { copies: Item["copies"] }) {
+export function Copies({ copies }: { copies: Item["copies"] }) {
   if (copies.length === 0) return null;
   return (
     <details className="copies">

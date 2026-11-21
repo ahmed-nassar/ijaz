@@ -63,10 +63,10 @@ class OpenRouter:
             return r.json()
         raise OpenRouterError(f"{path}: gave up after retries")
 
-    def embed(self, texts: list[str], batch: int = 100) -> list[list[float]]:
+    def embed(self, texts: list[str], batch: int = 100, model: str | None = None) -> list[list[float]]:
         out: list[list[float]] = []
         for start in range(0, len(texts), batch):
-            data = self._post("/embeddings", {"model": self.settings.embedding_model, "input": texts[start:start + batch]})
+            data = self._post("/embeddings", {"model": model or self.settings.embedding_model, "input": texts[start:start + batch]})
             self.embedding_usage.add(data.get("usage"))
             rows = sorted(data["data"], key=lambda d: d["index"])
             out.extend(row["embedding"] for row in rows)

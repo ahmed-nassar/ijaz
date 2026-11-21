@@ -15,6 +15,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     case,
@@ -143,6 +144,64 @@ class Alert(Base):
     source_id: Mapped[int | None] = mapped_column(ForeignKey("source.id"))
     message: Mapped[str] = mapped_column(Text)
     resolved: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Story(Base):
+    """A group of articles about one event (spec section 15). Built by the story step."""
+
+    __tablename__ = "story"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    first_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))  # river time of its first article
+    last_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)  # and of its latest
+    article_count: Mapped[int] = mapped_column(Integer, default=1)
+    lead_article_id: Mapped[int | None] = mapped_column(ForeignKey("article.id"))
+    # Written by the language model; shown only when the quality check passed.
+    headline_ar: Mapped[str | None] = mapped_column(Text)
+    headline_ok: Mapped[bool | None] = mapped_column(Boolean)
+    headline_issues: Mapped[list | None] = mapped_column(JSON)
+    importance: Mapped[int | None] = mapped_column(Integer)  # 1..5
+    importance_reason: Mapped[str | None] = mapped_column(Text)
+    event_date: Mapped[str | None] = mapped_column(String(10))
+    enriched_count: Mapped[int] = mapped_column(Integer, default=0)  # article_count at the last model call
+    enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set when an editor or a later step merges this story into another; its address redirects there.
+    merged_into_id: Mapped[int | None] = mapped_column(ForeignKey("story.id"))
+
+
+class StoryArticle(Base):
+    """Which story an article belongs to. Only first reports; syndicated copies follow their original."""
+
+    __tablename__ = "story_article"
+
+    article_id: Mapped[int] = mapped_column(ForeignKey("article.id"), primary_key=True)
+    story_id: Mapped[int] = mapped_column(ForeignKey("story.id"), index=True)
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    score: Mapped[float | None] = mapped_column()  # grouping score when it joined; null for a story's first article
+    how: Mapped[str] = mapped_column(String(10), default="new")  # new | score | judge
+    title_ar: Mapped[str | None] = mapped_column(Text)  # Arabic translation of a foreign-language headline
+
+
+class ArticleEmbedding(Base):
+    """Meaning vector of an article's headline and excerpt, as float32 bytes."""
+
+    __tablename__ = "article_embedding"
+
+    article_id: Mapped[int] = mapped_column(ForeignKey("article.id"), primary_key=True)
+    model: Mapped[str] = mapped_column(String(100), primary_key=True)
+    vector: Mapped[bytes] = mapped_column(LargeBinary)
+
+
+class HomepageSnapshot(Base):
+    """One computed homepage: the ranked stories with each one's score breakdown (spec section 5)."""
+
+    __tablename__ = "homepage_snapshot"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    settings: Mapped[dict] = mapped_column(JSON)
+    stories: Mapped[list] = mapped_column(JSON)  # [{story_id, rank, score, parts: {...}}]
 
 
 def river_time():

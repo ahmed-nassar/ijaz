@@ -130,6 +130,31 @@ It prints precision and recall at each threshold (targets: 95% and 85%), the bes
 
 `collector stories-eval --compare` measures the agreed design next to candidate fixes on the same answer key: `text-embedding-3-large` and `qwen/qwen3-embedding-8b`, no word weight for pairs in different languages, and a Gemini judge that decides matches in the uncertain band. Each row shows precision, recall, recall across languages and cost per 1,000 articles.
 
+## Stories, part 2: the homepage (preview)
+
+After each collector round (every 20 minutes, so Neon can sleep in between), the collector runs the story step in `src/stories/live.py`:
+
+1. **Group.** New first reports from the last 48 hours are placed into stories one at a time, as in the measurement. Syndicated copies stay with their original.
+2. **Write.** Stories with two or more reports go to the language model for a headline, importance, translations and event date, then the quality check. A story goes again each time it has grown by half. At most `STORIES_LIVE_ENRICH` (40) stories per round.
+3. **Rank.** The spec section 5 score: independent coverage by owner group, E from importance, a 12-hour recency half-life, velocity, and the caps (4 lead stories per publisher in the top 30, 8 of the top 20 per country, single-source stories below the top 10). G, C and M are 1 until page profiles and editor tools exist. The lead article is the one from the publisher with the highest authority.
+4. **Snapshot.** The ranked 30 with each story's score breakdown go into `homepage_snapshot` (kept 7 days).
+
+The live step's settings are the best measured so far, not the agreed starting design, and each is an environment variable:
+
+| Setting | Default | Variable |
+| --- | --- | --- |
+| Embedding model | `qwen/qwen3-embedding-8b` | `STORIES_LIVE_EMBEDDING_MODEL` |
+| Word weight, same language | 0.5 | `STORIES_LIVE_WORD_WEIGHT` |
+| Word weight, different languages | 0 | `STORIES_LIVE_WORD_WEIGHT_CROSS` |
+| Join on the score alone at | 0.625 | `STORIES_LIVE_THRESHOLD` |
+| Judge decides from | 0.35 (0 turns the judge off) | `STORIES_LIVE_JUDGE_LOW` |
+| Headlines, importance, judge | `google/gemini-3.1-flash-lite` | `STORIES_LLM_MODEL` |
+| Recency half-life | 12 hours | `STORIES_HALF_LIFE_HOURS` |
+
+`STORIES_LIVE=0` turns the step off. `collector stories-run` runs it once by hand.
+
+Pages: `/preview` is the homepage (hidden from search with `noindex` until it moves to `/`), and `/story/<number>` lists every report in a story, newest first. A merged story's address redirects. Each homepage story shows the headline written by the language model when its quality check passed, with the publisher's own headline beneath it, or the publisher's headline alone otherwise; `HOMEPAGE_AI_HEADLINES=0` on the web process shows only publisher headlines. The API behind them is `/api/home` and `/api/story/<number>`.
+
 ## Not in this increment
 
-Storing stories, ranking, the homepage, search, GDELT and Google News discovery, Scrapy for outlets without feeds, Bluesky, and database migrations (Alembic arrives once the schema settles; for now `init-db` creates tables).
+The sidebar modules, category and country pages, the password-protected score page, editor tools, search, GDELT and Google News discovery, Scrapy for outlets without feeds, Bluesky, and database migrations (Alembic arrives once the schema settles; for now `init-db` creates tables).
