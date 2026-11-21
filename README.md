@@ -51,16 +51,17 @@ Everything runs as one Fly.io app, `ijaz` (`fly.toml`, `Dockerfile`), with Postg
 | Group | Runs | Machine |
 | --- | --- | --- |
 | `web` | The River page at https://ijaz.fly.dev (Next.js on port 8080) and its read API (FastAPI on 127.0.0.1:8000, not reachable from outside). `/` redirects to `/river` until the homepage exists | Two machines: one always on, the second starts under load and stops when traffic drops |
-| `worker` | `collector -v run`: polls feeds, then runs the story step. It holds a lease in the database for each round, so a second worker, if one is ever added, never polls twice | One machine, always on, no web traffic; restarts on its own if it crashes |
+| `worker` | `collector -v run`: polls feeds, then runs the story step. The main worker holds a lease in the database and renews it each round, so two workers never poll twice | Two machines, one running. The standby stops itself once it sees the main worker renewing the lease. If no worker is running for two checks in a row (about 10 minutes), the web machine starts the stopped one (`collector watch-workers`, via the Fly Machines API, never the database). A crashed worker is restarted by Fly |
 
 Each deploy first runs `collector init-db && collector load-sources sources/sources.yaml` as the release command, so new tables and indexes exist before the new code starts.
 
 ```
 fly secrets set -a ijaz \
   DATABASE_URL='postgresql://USER:PASSWORD@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require' \
-  COLLECTOR_USER_AGENT='SiteName/0.1 (+https://site.example/about-our-crawler)'
+  COLLECTOR_USER_AGENT='SiteName/0.1 (+https://site.example/about-our-crawler)' \
+  FLY_MACHINES_TOKEN="$(fly tokens create deploy -a ijaz)"
 fly deploy --ha=false
-fly scale count web=2 worker=1 -a ijaz
+fly scale count web=2 worker=2 -a ijaz
 fly logs -a ijaz
 ```
 

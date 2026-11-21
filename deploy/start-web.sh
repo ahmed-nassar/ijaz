@@ -29,6 +29,9 @@ PY
 
 node web/server.js &
 web=$!
+# Best effort, outside the API/web pair: starts a stopped worker machine if none is
+# running (see src/collector/watchdog.py). It does nothing without FLY_MACHINES_TOKEN.
+collector watch-workers &
 # Exit as soon as either process ends.
 while [ $stopping = 0 ] && kill -0 $api 2>/dev/null && kill -0 $web 2>/dev/null; do sleep 2; done
 kill $api $web 2>/dev/null || true

@@ -46,6 +46,9 @@ class Settings:
     # connection open in between, so a serverless database (Neon) can sleep. 0 means
     # poll continuously, checking for due feeds every 30 seconds.
     round_minutes: int = field(default_factory=lambda: _int("COLLECTOR_ROUND_MINUTES", 0))
+    # A standby worker exits once it sees the main worker renewing the lease, so its
+    # machine stays stopped until the watchdog (collector watch-workers) needs it.
+    standby_stops: bool = field(default_factory=lambda: os.environ.get("COLLECTOR_STANDBY_STOPS") == "1")
     pause_after_failures: int = 20
     # Page check reads at most this many bytes, and stops at </head>.
     page_check_max_bytes: int = 256 * 1024
