@@ -250,7 +250,8 @@ def test_comparison_end_to_end(sessions, tmp_path):
     assert streamed == report["rows"]  # every row is handed out as soon as it is ready
     assert any("embedding" in n for n in notes)
     variants = [r["variant"] for r in report["rows"]]
-    assert len(variants) == 12 and "muse-ember judge" in variants[-1] and "gemini-3.1-flash-lite judge" in variants[-6]
+    assert len(variants) == 9 and all("gpt-6-luna judge" in v for v in variants[-3:])
+    assert [v.split("(band ")[1] for v in variants[-3:]] == ["0.25)", "0.325)", "0.4)"]
     h = report["headlines"]
     assert [m["model"] for m in h["models"]][-1] == "meta/muse-ember"
     assert all(m["written"] == len(h["stories"]) and m["passed_check"] == m["written"] for m in h["models"])
@@ -304,8 +305,12 @@ def test_comparison_judge_runs_in_parallel_with_their_own_clients(sessions, tmp_
     monkeypatch.setattr(evaluate, "OpenRouter", factory)
     report = evaluate.compare(sessions, str(gold), settings=StorySettings(api_key="k"), models=["qwen/qwen3-embedding-8b"])
     judged = [r for r in report["rows"] if "judge between" in r.get("variant", "")]
-    assert len(judged) == 6 and all(r["llm_calls"] >= 0 for r in judged)
-    assert {"anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "google/gemini-4-hydrogen"} <= set(made)
+    # One judge (GPT-6 Luna) at three band widths, each with its own client.
+    assert len(judged) == 3 and all(r["llm_calls"] >= 0 for r in judged)
+    assert len({r["variant"] for r in judged}) == 3
+    assert made.count(evaluate.JUDGE_MODEL) >= 3
+    for r in judged:
+        assert sum(r["missed_reasons"].values()) == round((1 - r["recall"]) * report["gold_pairs"])
     # Headlines: every writer used its own model; the check always went to the fixed checker.
     chats = [r["body"] for r in fake.requests if r["path"].endswith("/chat/completions")]
     story_models = {b["model"] for b in chats if b["response_format"]["json_schema"]["name"] == "story"}

@@ -360,8 +360,11 @@ LLM_MODELS = [
     "google/gemini-4-hydrogen",
     "meta/muse-ember",
 ]
-# (judge model, width of the uncertain band below the threshold); 0.25 was the best band so far.
-JUDGE_RUNS = [(m, 0.25) for m in LLM_MODELS]
+# GPT-6 Luna is the chosen judge (21 Nov 2026), so the judge runs now compare how far
+# below the threshold its band reaches: (judge model, band width below the threshold).
+# 0.25 is the live setting (judge from 0.375 to 0.625).
+JUDGE_MODEL = "openai/gpt-6-luna"
+JUDGE_RUNS = [(JUDGE_MODEL, w) for w in (0.25, 0.325, 0.4)]
 # Every writer's headline is checked by the same model, so the pass rates compare.
 HEADLINE_CHECKER = "anthropic/claude-haiku-5.5"
 HEADLINE_STORIES = 12
@@ -396,13 +399,32 @@ def _judged(base, matrix, judge_model, width, settings, client, rows, by_id, ite
     groups = group_with_judge(items, matrix, low, high, ask, settings.window_hours)
     predicted = pairs(groups)
     p, r, _ = scores(predicted, gold_pairs)
-    return {"variant": f"{base['variant']} + {judge_model.split('/')[-1]} judge between {low:.3f} and {high:.3f}",
+    index = {row.id: k for k, row in enumerate(rows)}
+
+    def pair_score(pair):
+        return float(matrix[index[pair[0]], index[pair[1]]])
+
+    # Where recall is lost: a missed pair scoring below the band was never shown to the
+    # judge; one in the band was refused (or another story was picked); one above the
+    # threshold scored high as a pair but its story's two-best average did not.
+    missed_pairs = sorted(gold_pairs - predicted, key=pair_score, reverse=True)
+    reasons = {"below the band": 0, "in the band": 0, "above the threshold": 0}
+    reasons_cross = dict(reasons)
+    for pair in missed_pairs:
+        value = pair_score(pair)
+        key = "below the band" if value < low else "in the band" if value < high else "above the threshold"
+        reasons[key] += 1
+        if pair in cross:
+            reasons_cross[key] += 1
+    return {"variant": f"{base['variant']} + {judge_model.split('/')[-1]} judge between {low:.3f} and {high:.3f} (band {width})",
             "model": base["model"], "threshold": high, "precision": p, "recall": r,
             "cross_language_recall": scores(predicted, cross)[1] if cross else None,
             "llm_calls": c.llm_usage.calls - before_calls, "judge_errors": len(errors), "first_error": errors[0] if errors else None,
             "cost_per_1000_usd": base["cost_per_1000_usd"] + (c.llm_usage.cost_usd - before_cost) / n * 1000,
-            "wrongly_joined": [[by_id[a].title, by_id[b].title] for a, b in sorted(predicted - gold_pairs)][:15],
-            "missed": [[by_id[a].title, by_id[b].title] for a, b in sorted(gold_pairs - predicted)][:15]}
+            "missed_reasons": reasons, "missed_reasons_cross_language": reasons_cross,
+            "wrongly_joined": [[by_id[a].title, by_id[b].title] for a, b in sorted(predicted - gold_pairs)][:25],
+            "missed": [[by_id[a].title, by_id[b].title, round(pair_score((a, b)), 3), (a, b) in cross]
+                       for a, b in missed_pairs][:40]}
 
 
 
@@ -453,6 +475,13 @@ def render_compare(report: dict, rows: bool = True) -> str:
     for r in report["rows"]:
         if "wrongly_joined" not in r:
             continue
-        lines += ["", f"{r['variant']}", "  Wrongly joined (first 15):"] + [f"    {a}\n      + {b}" for a, b in r["wrongly_joined"]]
-        lines += ["  Missed (first 15):"] + [f"    {a}\n      + {b}" for a, b in r["missed"]]
+        lines += ["", f"{r['variant']}", "  Wrongly joined (first 25):"] + [f"    {a}\n      + {b}" for a, b in r["wrongly_joined"]]
+        if "missed_reasons" in r:
+            why = ", ".join(f"{k} {v} ({r['missed_reasons_cross_language'][k]} across languages)" for k, v in r["missed_reasons"].items())
+            lines += [f"  Missed pairs by pair score: {why}"]
+        lines += ["  Missed (highest pair score first, up to 40):"]
+        for m in r["missed"]:
+            a, b = m[0], m[1]
+            note = f" [score {m[2]}{', across languages' if m[3] else ''}]" if len(m) > 2 else ""
+            lines.append(f"    {a}\n      + {b}{note}")
     return "\n".join(lines)

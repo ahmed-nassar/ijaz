@@ -97,14 +97,22 @@ JUDGE_SYSTEM = """\
 You decide whether a news report belongs to an existing story on إيجاز, an Arabic news site.
 A story is ONE specific event or development: the same incident, statement, meeting, decision, announcement or release of figures, reported by different outlets, possibly in different languages and with different details or updated figures.
 
+These ARE the same story:
+- the same event reported in Arabic, English or Turkish, even when headlines and figures differ (a death toll that rises, slightly different measurements);
+- reports that credit different outlets or officials for the same news;
+- one country's routine updates on the same subject on the same day: that day's gold prices in one country, its exchange rate for one currency, or its weather forecast, whatever the angle, figure or time of day.
+
 These are NOT the same story, even though they share a topic:
-- two different trials, matches, attacks, meetings or speeches, even at the same court, league, conference or summit;
+- two different trials, matches, attacks, meetings or speeches, even at the same court, league, conference or summit. Different case names or a different number of defendants mean different trials;
+- a player's injury, transfer or comments, versus the result of a match, even the same match;
+- one award, film or side event at a festival or conference, versus the festival or conference as a whole;
+- a daily agenda, morning briefing, newsletter, "top stories" list or other roundup: it is never the same story as anything else, not even another roundup;
+- a market wrap or a report on one asset (gold, oil, bitcoin, a currency, stocks), versus a report on a different asset, market or country, even when the same cause (the Fed, AI fears) is mentioned;
 - a feature, explainer, analysis, fact-check, opinion or "what it means for us" piece, versus the news event it discusses;
 - a reaction or condemnation by a third party, versus the event itself;
-- separate side events or interviews at the same conference;
 - a local angle (prices in one country, a ban in one country) versus the international news.
 
-Read the new report, then each candidate. Answer with the candidate only if both clearly report the same specific event. When unsure, answer 0.
+Read the new report, then each candidate. Answer with the candidate only if both clearly report the same specific event, or are the same day's routine update described above. When unsure, answer 0.
 Return JSON with reason (one short English sentence) and match: the number of the candidate story, or 0 if none.
 """
 
