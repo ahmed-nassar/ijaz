@@ -6,7 +6,7 @@ import { clockTime, copiesWord, groupByHour, isRtl, splitRuns } from "../lib/for
 import { STYLES } from "../lib/styles";
 
 // Placeholder until branding is decided (spec section 14).
-export const SITE_NAME = process.env.SITE_NAME ?? "اسم الموقع";
+export const SITE_NAME = process.env.SITE_NAME ?? "إيجاز";
 
 const LANGUAGE_LABEL: Record<string, string> = { en: "EN", tr: "TR", fr: "FR" };
 const languageNames = new Intl.DisplayNames(["ar"], { type: "language" });

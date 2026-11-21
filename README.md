@@ -102,7 +102,7 @@ npm run build && API_URL=http://127.0.0.1:8000 npm start   # http://localhost:30
 npm test                                             # time, grouping, plural and bidi helpers
 ```
 
-`SITE_NAME` sets the header name; until branding is decided it shows the placeholder «اسم الموقع».
+The header and page titles show the site name «إيجاز»; `SITE_NAME` overrides it.
 
 Browser checks (need Playwright with Chromium; not a project dependency):
 
