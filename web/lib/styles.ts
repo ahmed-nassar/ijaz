@@ -34,13 +34,12 @@ form.filters button{font:inherit;font-weight:600;color:#fff;background:var(--lin
 .reset{font-size:.9rem;align-self:center}
 section.hour h2{font-size:.95rem;font-weight:600;color:var(--muted);margin:1.5rem 0 .25rem;padding-block-end:.25rem;border-block-end:1px solid var(--rule)}
 ol.items{list-style:none;margin:0;padding:0}
-ol.items>li{padding-block:.4rem;border-block-end:1px solid var(--rule);line-height:1.65}
+ol.items>li{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:0 .75rem;align-items:baseline;padding-block:.4rem;border-block-end:1px solid var(--rule);line-height:1.65}
+.row{display:grid;grid-template-columns:11rem minmax(0,1fr);gap:0 .75rem;align-items:baseline}
 ol.items>li:last-child{border-block-end:0}
-.time{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums;margin-inline-end:.4rem}
-.publisher{font-size:.92rem;color:var(--muted);margin-inline-end:.15rem}
+.time{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.publisher{font-size:.92rem;color:var(--muted);overflow-wrap:anywhere}
 .headline{font-weight:600;overflow-wrap:anywhere}
-/* A left-to-right headline inside a right-to-left row stays one block, so a wrapped English line still reads in order */
-.headline[dir=ltr]{display:inline-block;max-inline-size:100%}
 .lang{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;line-height:1.4;color:var(--chip-text);background:var(--chip-bg);
   border-radius:3px;padding-inline:.35rem;margin-inline-start:.4rem;vertical-align:.1em;text-decoration:none}
 details.copies{display:inline;margin-inline-start:.5rem;font-size:.85rem}
@@ -55,7 +54,13 @@ nav.pager{display:flex;justify-content:space-between;gap:1rem;padding-block:1.5r
 .empty,.error{padding-block:2rem;color:var(--muted)}
 footer.site{border-block-start:1px solid var(--rule);color:var(--muted);font-size:.85rem;padding-block:1rem 2rem}
 .sr-only{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media (max-width:40rem){
+  /* Too narrow for three columns: headlines align under the publisher name instead */
+  .row{display:block}
+  .publisher{display:block;font-size:.85rem;line-height:1.5}
+}
 @media (max-width:30rem){
   body{font-size:1rem}
+  ol.items>li{grid-template-columns:2.9rem minmax(0,1fr);gap:0 .5rem}
 }
 `;
