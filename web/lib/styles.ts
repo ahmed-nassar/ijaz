@@ -2,12 +2,12 @@
 // Logical properties (inline-start/end, block) only, so the same rules serve a left-to-right site.
 export const STYLES = `
 :root{
-  --bg:#ffffff;--text:#16181b;--muted:#5f6368;--faint:#6b7077;--rule:#ececec;--link:#0b3a8c;--visited:#4b4f55;
+  --bg:#ffffff;--text:#16181b;--muted:#5f6368;--faint:#6b7077;--rule:#ececec;--link:#1d4ed8;--visited:#6b3fa0;
   --focus:#0b57d0;
   color-scheme:light dark;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#111214;--text:#e8e9eb;--muted:#a4a8ae;--faint:#8b9096;--rule:#25272b;--link:#9ec1ff;--visited:#b9bdc3;
+  --bg:#111214;--text:#e8e9eb;--muted:#a4a8ae;--faint:#8b9096;--rule:#25272b;--link:#9ec1ff;--visited:#c9a7f5;
   --focus:#8ab4f8;
 }}
 *,*::before,*::after{box-sizing:border-box}
@@ -42,9 +42,9 @@ ol.items>li{display:grid;grid-template-columns:2.8rem minmax(0,1fr);gap:0 .75rem
 .row{display:grid;grid-template-columns:9.5rem minmax(0,1fr);gap:0 .75rem;align-items:baseline}
 .time{color:var(--faint);font-size:.75rem;font-variant-numeric:tabular-nums}
 .publisher{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
-.headline{font-weight:500;color:var(--text);overflow-wrap:anywhere;text-decoration:none}
+.headline{font-weight:500;color:var(--link);overflow-wrap:anywhere;text-decoration:none}
 .headline:visited{color:var(--visited)}
-.headline:hover,.headline:focus-visible{color:var(--link);text-decoration:underline}
+.headline:hover,.headline:focus-visible{text-decoration:underline}
 .lang{font-size:.68rem;font-weight:500;letter-spacing:.06em;color:var(--faint);margin-inline-start:.4rem;text-decoration:none}
 details.copies{display:inline;margin-inline-start:.5rem;font-size:.75rem}
 details.copies[open]{display:block;margin-inline-start:0}
