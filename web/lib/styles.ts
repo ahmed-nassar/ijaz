@@ -39,7 +39,8 @@ ol.items>li{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:0 .75rem
 ol.items>li:last-child{border-block-end:0}
 .time{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
 .publisher{font-size:.92rem;color:var(--muted);overflow-wrap:anywhere}
-.headline{font-weight:600;overflow-wrap:anywhere}
+.headline{font-weight:600;overflow-wrap:anywhere;text-decoration:none}
+.headline:hover,.headline:focus-visible{text-decoration:underline}
 .lang{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;line-height:1.4;color:var(--chip-text);background:var(--chip-bg);
   border-radius:3px;padding-inline:.35rem;margin-inline-start:.4rem;vertical-align:.1em;text-decoration:none}
 details.copies{display:inline;margin-inline-start:.5rem;font-size:.85rem}

@@ -62,6 +62,18 @@ Use Neon's direct connection string (host without `-pooler`).
 
 `fly.toml` sets `COLLECTOR_ROUND_MINUTES=20`: the worker polls every feed that is due within the next 20 minutes, closes its database connections and sleeps until the next round. That lets Neon's compute scale to zero between rounds (about 55 compute hours a month at 0.25 CU; the free plan allows 100). Without the variable, `run` polls continuously and checks for due feeds every 30 seconds, which keeps the database awake.
 
+### The website (River page)
+
+The River page and its read API run together as a second Fly app, `ijaz`, at https://ijaz.fly.dev (`fly.web.toml`, `Dockerfile.web`). One machine runs the API on 127.0.0.1:8000 (not reachable from outside) and the Next.js server on port 8080. `/` redirects to `/river` until the homepage exists. The machine stops when the site is idle and starts on the next visit, so neither it nor Neon runs while nobody is reading.
+
+```
+fly apps create ijaz
+fly secrets set -a ijaz DATABASE_URL='<the same Neon string as the collector>'
+fly deploy -c fly.web.toml
+```
+
+Deploy the collector from the same commit first: its release command creates the River's database index.
+
 ## Tests
 
 ```
@@ -105,4 +117,4 @@ node web/scripts/measure-lcp.mjs http://localhost:3000        # LCP on slow 4G w
 
 ## Not in this increment
 
-Clustering, ranking, AI, the homepage, search, deploying the River (API and web app), GDELT and Google News discovery, Scrapy for outlets without feeds, Bluesky, and database migrations (Alembic arrives once the schema settles; for now `init-db` creates tables).
+Clustering, ranking, AI, the homepage, search, GDELT and Google News discovery, Scrapy for outlets without feeds, Bluesky, and database migrations (Alembic arrives once the schema settles; for now `init-db` creates tables).
