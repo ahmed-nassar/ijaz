@@ -138,7 +138,7 @@ def test_enrich_writes_then_checks_and_tracks_cost():
     assert result["headline_ar"] == "عنوان" and result["quality"]["ok"] is True
     assert [r["body"]["response_format"]["json_schema"]["name"] for r in fake.requests] == ["story", "check"]
     assert fake.requests[0]["auth"] == "Bearer test-key"
-    assert fake.requests[0]["body"]["model"] == "google/gemini-3.1-flash-lite"
+    assert fake.requests[0]["body"]["model"] == "openai/gpt-6-luna"  # the default writer
     assert "Four dead at Hartha." in fake.requests[0]["body"]["messages"][1]["content"]
     assert c.llm_usage.calls == 2 and abs(c.llm_usage.cost_usd - 0.0002) < 1e-9
 

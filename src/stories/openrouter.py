@@ -17,7 +17,7 @@ class OpenRouterError(RuntimeError):
 
 
 # Models whose reasoning cannot be switched off: the lowest effort instead.
-REASONING = {"google/gemini-4-hydrogen": {"effort": "low"}}
+REASONING = {"google/gemini-4-hydrogen": {"effort": "low"}, "meta/muse-ember": {"effort": "low"}}
 
 
 def parse_json(content: str) -> dict:
