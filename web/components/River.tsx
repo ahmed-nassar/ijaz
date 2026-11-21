@@ -104,7 +104,7 @@ function FilterForm({ options, filters }: { options: FilterOptions | null; filte
   return (
     <form className="filters" method="get" action="/river" aria-label="تصفية الأخبار">
       <label>
-        اللغة
+        <span className="sr-only">اللغة</span>
         <select name="lang" defaultValue={filters.lang ?? ""}>
           <option value="">كل اللغات</option>
           {options.languages.map((code) => (
@@ -113,7 +113,7 @@ function FilterForm({ options, filters }: { options: FilterOptions | null; filte
         </select>
       </label>
       <label>
-        البلد
+        <span className="sr-only">البلد</span>
         <select name="country" defaultValue={filters.country ?? ""}>
           <option value="">كل البلدان</option>
           {options.countries
@@ -125,7 +125,7 @@ function FilterForm({ options, filters }: { options: FilterOptions | null; filte
         </select>
       </label>
       <label>
-        الناشر
+        <span className="sr-only">الناشر</span>
         <select name="publisher" defaultValue={filters.publisher ?? ""}>
           <option value="">كل الناشرين</option>
           {options.publishers.map((p) => (
@@ -150,8 +150,10 @@ export function RiverPage(props: {
   const groups = groupByHour(items);
   return (
     <Document title={`كل الأخبار | ${SITE_NAME}`}>
-      <h1>كل الأخبار</h1>
-      <FilterForm options={options} filters={filters} />
+      <div className="bar">
+        <h1>كل الأخبار</h1>
+        <FilterForm options={options} filters={filters} />
+      </div>
       {groups.length === 0 && <p className="empty">لا توجد أخبار تطابق هذا الاختيار.</p>}
       {groups.map((group) => (
         <section className="hour" key={group.key} aria-labelledby={`h-${group.key}`}>

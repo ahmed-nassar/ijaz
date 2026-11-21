@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = join(root, "node_modules/@fontsource/ibm-plex-sans-arabic");
 const keep = ["arabic", "latin", "latin-ext"];
-const weights = ["400", "600"];
+const weights = ["400", "500", "600"];
 
 mkdirSync(join(root, "public/fonts"), { recursive: true });
 copyFileSync(join(pkg, "LICENSE"), join(root, "public/fonts/LICENSE-IBM-Plex-OFL.txt"));
