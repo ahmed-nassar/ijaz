@@ -264,37 +264,58 @@ def compare(sessions, gold_path: str, settings: StorySettings | None = None, cli
         add(f"{short}: meaning only", meaning, model, cost)
 
     ok = [r for r in out if "error" not in r and r["precision"] >= PRECISION_TARGET]
-    judged = None
     if ok:
-        base = max(ok, key=lambda r: r["recall"])
-        matrix = matrices[base["variant"]]
-        high = base["threshold"]
-        low = max(0.2, high - 0.25)
-        c = client or OpenRouter(replace(settings, embedding_model=base["model"]))
-        before_cost, before_calls = c.llm_usage.cost_usd, c.llm_usage.calls
-
-        def report(i):
-            r = rows[i]
-            return Report(r.id, r.publisher, r.language, r.time.strftime("%Y-%m-%d %H:%M"), r.title, r.excerpt)
-
-        def ask(i, candidates):
-            try:
-                return judge_call(c, report(i), [[report(m) for m in story] for story in candidates])
-            except Exception:
-                return None
-
-        groups = group_with_judge(items, matrix, low, high, ask, settings.window_hours)
-        p, r, _ = scores(pairs(groups), gold_pairs)
-        calls = c.llm_usage.calls - before_calls
-        judged = {"variant": f"{base['variant']} + Gemini judge between {low:.3f} and {high:.3f}", "model": base["model"],
-                  "threshold": high, "precision": p, "recall": r,
-                  "cross_language_recall": scores(pairs(groups), cross)[1] if cross else None,
-                  "llm_calls": calls,
-                  "cost_per_1000_usd": base["cost_per_1000_usd"] + (c.llm_usage.cost_usd - before_cost) / n * 1000,
-                  "wrongly_joined": [[by_id[a].title, by_id[b].title] for a, b in sorted(pairs(groups) - gold_pairs)][:15],
-                  "missed": [[by_id[a].title, by_id[b].title] for a, b in sorted(gold_pairs - pairs(groups))][:15]}
-        out.append(judged)
+        base = max(ok, key=lambda r: (r["recall"], r["precision"]))
+        for judge_model, width in JUDGE_RUNS:
+            out.append(_judged(base, matrices[base["variant"]], judge_model, width, settings, client, rows, by_id, items,
+                               gold_pairs, cross, n))
     return {"articles": n, "gold_pairs": len(gold_pairs), "cross_language_gold_pairs": len(cross), "rows": out}
+
+
+# (judge model, width of the uncertain band below the threshold)
+JUDGE_RUNS = [
+    ("google/gemini-3.1-flash-lite", 0.15),
+    ("google/gemini-3.1-flash-lite", 0.25),
+    ("anthropic/claude-haiku-5.5", 0.25),
+]
+
+
+def _judged(base, matrix, judge_model, width, settings, client, rows, by_id, items, gold_pairs, cross, n):
+    from dataclasses import replace
+
+    from .enrich import judge as judge_call
+
+    high = base["threshold"]
+    low = max(0.2, high - width)
+    c = client or OpenRouter(replace(settings, llm_model=judge_model))
+    if client is not None:
+        c.settings = replace(settings, llm_model=judge_model)
+    before_cost, before_calls = c.llm_usage.cost_usd, c.llm_usage.calls
+    errors: list[str] = []
+
+    def report(i):
+        r = rows[i]
+        return Report(r.id, r.publisher, r.language, r.time.strftime("%Y-%m-%d %H:%M"), r.title, r.excerpt)
+
+    def ask(i, candidates):
+        try:
+            return judge_call(c, report(i), [[report(m) for m in story] for story in candidates])
+        except Exception as e:
+            errors.append(str(e)[:200])
+            return None
+
+    groups = group_with_judge(items, matrix, low, high, ask, settings.window_hours)
+    predicted = pairs(groups)
+    p, r, _ = scores(predicted, gold_pairs)
+    return {"variant": f"{base['variant']} + {judge_model.split('/')[-1]} judge between {low:.3f} and {high:.3f}",
+            "model": base["model"], "threshold": high, "precision": p, "recall": r,
+            "cross_language_recall": scores(predicted, cross)[1] if cross else None,
+            "llm_calls": c.llm_usage.calls - before_calls, "judge_errors": len(errors), "first_error": errors[0] if errors else None,
+            "cost_per_1000_usd": base["cost_per_1000_usd"] + (c.llm_usage.cost_usd - before_cost) / n * 1000,
+            "wrongly_joined": [[by_id[a].title, by_id[b].title] for a, b in sorted(predicted - gold_pairs)][:15],
+            "missed": [[by_id[a].title, by_id[b].title] for a, b in sorted(gold_pairs - predicted)][:15]}
+
+
 
 
 def render_compare(report: dict) -> str:
@@ -308,8 +329,11 @@ def render_compare(report: dict) -> str:
         x = f"{r['cross_language_recall']:.0%}" if r["cross_language_recall"] is not None else "n/a"
         lines.append(f"{r['variant']}\n    threshold {r['threshold']}: precision {r['precision']:.1%}, recall {r['recall']:.1%}, "
                      f"across languages {x}; {r['llm_calls']} judge calls; ${r['cost_per_1000_usd']:.3f} per 1,000 articles")
-    judged = report["rows"][-1] if report["rows"] and "wrongly_joined" in report["rows"][-1] else None
-    if judged:
-        lines += ["", "With the judge, wrongly joined (first 15):"] + [f"  {a}\n    + {b}" for a, b in judged["wrongly_joined"]]
-        lines += ["", "With the judge, missed (first 15):"] + [f"  {a}\n    + {b}" for a, b in judged["missed"]]
+        if r.get("judge_errors"):
+            lines.append(f"    {r['judge_errors']} judge calls failed, first: {r['first_error']}")
+    for r in report["rows"]:
+        if "wrongly_joined" not in r:
+            continue
+        lines += ["", f"{r['variant']}", "  Wrongly joined (first 15):"] + [f"    {a}\n      + {b}" for a, b in r["wrongly_joined"]]
+        lines += ["  Missed (first 15):"] + [f"    {a}\n      + {b}" for a, b in r["missed"]]
     return "\n".join(lines)

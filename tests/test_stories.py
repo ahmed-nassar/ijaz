@@ -44,7 +44,7 @@ class FakeOpenRouter:
             return httpx.Response(200, json={"data": data, "usage": {"prompt_tokens": 10 * len(data), "cost": 0.00001 * len(data)}})
         schema = body["response_format"]["json_schema"]["name"]
         if schema == "judge":
-            content = {"match": 1}
+            content = {"reason": "same event", "match": 1}
         elif schema == "story":
             content = {"headline_ar": "عنوان", "importance": 3, "importance_reason": "test", "event_date": None, "translations": []}
         else:
@@ -234,6 +234,6 @@ def test_comparison_end_to_end(sessions, tmp_path):
     gold.write_text(json.dumps({"articles": [a.id for a in articles], "groups": groups}))
     report = compare(sessions, str(gold), client=client(FakeOpenRouter()), models=["openai/text-embedding-3-small", "qwen/qwen3-embedding-8b"])
     variants = [r["variant"] for r in report["rows"]]
-    assert len(variants) == 7 and "Gemini judge" in variants[-1]
+    assert len(variants) == 9 and "claude-haiku-5.5 judge" in variants[-1] and "gemini-3.1-flash-lite judge" in variants[-3]
     assert "agreed design" in variants[0]
     assert "per 1,000 articles" in render_compare(report)
