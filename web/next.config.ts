@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   poweredByHeader: false,
+  // A self-contained server in .next/standalone, so the Docker image needs no node_modules.
+  output: "standalone",
   async rewrites() {
     return [{ source: "/river", destination: "/api/river" }];
   },
