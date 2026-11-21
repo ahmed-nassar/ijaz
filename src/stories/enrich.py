@@ -83,10 +83,12 @@ def reports_text(reports: list[Report], limit: int = 12) -> str:
     return "\n\n".join(lines)
 
 
-def enrich(client: OpenRouter, reports: list[Report]) -> dict:
+def enrich(client: OpenRouter, reports: list[Report], checker: OpenRouter | None = None) -> dict:
+    """``checker`` runs the quality check with another model (the comparison uses one
+    fixed checker for every writer); by default the writer checks itself."""
     text = reports_text(reports)
     result = client.chat_json(WRITE_SYSTEM, text, "story", WRITE_SCHEMA)
-    check = client.chat_json(CHECK_SYSTEM, f"Headline: {result['headline_ar']}\n\nReports:\n{text}", "check", CHECK_SCHEMA)
+    check = (checker or client).chat_json(CHECK_SYSTEM, f"Headline: {result['headline_ar']}\n\nReports:\n{text}", "check", CHECK_SCHEMA)
     result["quality"] = check
     return result
 
