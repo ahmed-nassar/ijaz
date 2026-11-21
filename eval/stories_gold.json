@@ -799,7 +799,81 @@
   "lebanon-independence-day": [
    2174,
    2053
+  ],
+  "france-cost-of-living-protests": [
+   1945,
+   2209
+  ],
+  "october-city-housing-projects": [
+   2191,
+   2257
   ]
  },
- "checked_by_ahmed": {}
+ "checked_by_ahmed": {
+  "date": "2026-11-21",
+  "pairs_checked": 100,
+  "agree": 87,
+  "disagree": {
+   "note": "Both were marked different stories; Ahmed says same story. Groups added above.",
+   "pairs": [
+    [
+     1945,
+     2209
+    ],
+    [
+     2191,
+     2257
+    ]
+   ]
+  },
+  "unsure": {
+   "note": "Left as in the key.",
+   "pairs": [
+    [
+     1995,
+     2109
+    ],
+    [
+     2214,
+     1875
+    ],
+    [
+     2258,
+     2068
+    ],
+    [
+     1937,
+     1864
+    ],
+    [
+     2129,
+     2126
+    ],
+    [
+     2174,
+     2053
+    ],
+    [
+     2016,
+     1988
+    ],
+    [
+     1919,
+     1875
+    ],
+    [
+     2200,
+     2260
+    ],
+    [
+     2222,
+     1907
+    ],
+    [
+     2210,
+     1860
+    ]
+   ]
+  }
+ }
 }
