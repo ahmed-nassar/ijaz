@@ -238,7 +238,11 @@ def test_comparison_end_to_end(sessions, tmp_path):
     assert streamed == report["rows"]  # every row is handed out as soon as it is ready
     assert any("embedding" in n for n in notes)
     variants = [r["variant"] for r in report["rows"]]
-    assert len(variants) == 9 and "claude-haiku-5.5 judge" in variants[-1] and "gemini-3.1-flash-lite judge" in variants[-3]
+    assert len(variants) == 11 and "gemini-4-hydrogen judge" in variants[-1] and "gemini-3.1-flash-lite judge" in variants[-5]
+    h = report["headlines"]
+    assert [m["model"] for m in h["models"]][-1] == "google/gemini-4-hydrogen"
+    assert all(m["written"] == len(h["stories"]) and m["passed_check"] == m["written"] for m in h["models"])
+    assert "passed the check" in render_compare(report)
     assert "agreed design" in variants[0]
     assert "per 1,000 articles" in render_compare(report)
 
@@ -288,7 +292,20 @@ def test_comparison_judge_runs_in_parallel_with_their_own_clients(sessions, tmp_
     monkeypatch.setattr(evaluate, "OpenRouter", factory)
     report = evaluate.compare(sessions, str(gold), settings=StorySettings(api_key="k"), models=["qwen/qwen3-embedding-8b"])
     judged = [r for r in report["rows"] if "judge between" in r.get("variant", "")]
-    assert len(judged) == 3 and all(r["llm_calls"] >= 0 for r in judged)
-    assert "anthropic/claude-haiku-5.5" in made
-    judge_models = {r["body"]["model"] for r in fake.requests if r["path"].endswith("/chat/completions")}
-    assert judge_models <= {"google/gemini-3.1-flash-lite", "anthropic/claude-haiku-5.5"}
+    assert len(judged) == 5 and all(r["llm_calls"] >= 0 for r in judged)
+    assert {"anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "google/gemini-4-hydrogen"} <= set(made)
+    # Headlines: every writer used its own model; the check always went to the fixed checker.
+    chats = [r["body"] for r in fake.requests if r["path"].endswith("/chat/completions")]
+    story_models = {b["model"] for b in chats if b["response_format"]["json_schema"]["name"] == "story"}
+    check_models = {b["model"] for b in chats if b["response_format"]["json_schema"]["name"] == "check"}
+    assert story_models == set(evaluate.LLM_MODELS) and check_models == {evaluate.HEADLINE_CHECKER}
+    hydrogen = [b for b in chats if b["model"] == "google/gemini-4-hydrogen"]
+    assert hydrogen and all(b["reasoning"] == {"effort": "low"} for b in hydrogen)
+
+
+def test_json_replies_wrapped_in_text_or_fences_are_read():
+    from stories.openrouter import parse_json
+
+    assert parse_json('{"match": 1}') == {"match": 1}
+    assert parse_json('```json\n{"match": 2}\n```') == {"match": 2}
+    assert parse_json('Here is the answer: {"ok": true, "issues": []} Done.') == {"ok": True, "issues": []}

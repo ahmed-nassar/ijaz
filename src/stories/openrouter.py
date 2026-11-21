@@ -16,6 +16,22 @@ class OpenRouterError(RuntimeError):
     pass
 
 
+# Models whose reasoning cannot be switched off: the lowest effort instead.
+REASONING = {"google/gemini-4-hydrogen": {"effort": "low"}}
+
+
+def parse_json(content: str) -> dict:
+    """The reply as JSON. Models without schema support sometimes wrap it in a code
+    fence or a sentence, so the outermost {...} is tried as well."""
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        start, end = content.find("{"), content.rfind("}")
+        if start != -1 and end > start:
+            return json.loads(content[start:end + 1])
+        raise
+
+
 @dataclass
 class Usage:
     calls: int = 0
@@ -79,17 +95,18 @@ class OpenRouter:
     def chat_json(self, system: str, user: str, schema_name: str, schema: dict) -> dict:
         body = {
             "model": self.settings.llm_model,
-            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            "messages": [{"role": "system", "content": system + "\nAnswer with the JSON object only."},
+                         {"role": "user", "content": user}],
             "response_format": {"type": "json_schema", "json_schema": {"name": schema_name, "strict": True, "schema": schema}},
             "temperature": 0.2,
-            "reasoning": {"enabled": False},
+            "reasoning": REASONING.get(self.settings.llm_model, {"enabled": False}),
             "usage": {"include": True},
         }
         data = self._post("/chat/completions", body)
         self.llm_usage.add(data.get("usage"))
-        content = data["choices"][0]["message"]["content"]
+        content = data["choices"][0]["message"]["content"] or ""
         try:
-            return json.loads(content)
+            return parse_json(content)
         except json.JSONDecodeError as e:
             raise OpenRouterError(f"model did not return JSON: {content[:200]}") from e
 

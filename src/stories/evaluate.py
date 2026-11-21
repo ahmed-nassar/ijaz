@@ -294,15 +294,75 @@ def compare(sessions, gold_path: str, settings: StorySettings | None = None, cli
                         emit(f.result())
                     except Exception as e:  # one failed run must not lose the others
                         emit({"variant": "error", "model": "judge", "error": str(e)[:200]})
-    return {"articles": n, "gold_pairs": len(gold_pairs), "cross_language_gold_pairs": len(cross), "rows": out}
+    headlines = _headline_comparison(gold, rows, by_id, n, settings, client, say)
+    return {"articles": n, "gold_pairs": len(gold_pairs), "cross_language_gold_pairs": len(cross), "rows": out,
+            "headlines": headlines}
 
 
-# (judge model, width of the uncertain band below the threshold)
-JUDGE_RUNS = [
-    ("google/gemini-3.1-flash-lite", 0.15),
-    ("google/gemini-3.1-flash-lite", 0.25),
-    ("anthropic/claude-haiku-5.5", 0.25),
+def _headline_comparison(gold, rows, by_id, n, settings, client, say) -> dict:
+    """Each model writes headlines for the same largest answer-key stories; one fixed
+    model checks them all. Cost per 1,000 articles assumes each story with two or more
+    reports is written once (re-writes as stories grow add to it)."""
+    from dataclasses import replace
+
+    stories = sorted(gold["groups"].items(), key=lambda kv: len(kv[1]), reverse=True)[:HEADLINE_STORIES]
+    reports = {
+        name: [Report(i, by_id[i].publisher, by_id[i].language, by_id[i].time.strftime("%Y-%m-%d %H:%M"), by_id[i].title, by_id[i].excerpt)
+               for i in sorted(ids, key=lambda i: by_id[i].time)]
+        for name, ids in stories
+    }
+    stories_per_article = len(gold["groups"]) / n
+
+    def one(model):
+        say(f"headlines: {model}")
+        writer = client or OpenRouter(replace(settings, llm_model=model))
+        checker = client or OpenRouter(replace(settings, llm_model=HEADLINE_CHECKER))
+        if client is not None:
+            writer.settings = replace(settings, llm_model=model)
+        out, cost, calls, errors = {}, 0.0, 0, []
+        for name, rs in reports.items():
+            before, before_calls = writer.llm_usage.cost_usd, writer.llm_usage.calls
+            try:
+                r = enrich(writer, rs, checker=checker if client is None else None)
+                out[name] = {"headline": r["headline_ar"], "importance": r.get("importance"),
+                             "ok": bool(r["quality"].get("ok")), "issues": r["quality"].get("issues") or []}
+            except Exception as e:
+                out[name] = {"error": str(e)[:200]}
+                errors.append(str(e)[:200])
+            # Only the writing call is the model's own cost; the check is the shared referee.
+            cost += writer.llm_usage.cost_usd - before if client is None else (writer.llm_usage.cost_usd - before) / 2
+            calls += writer.llm_usage.calls - before_calls
+        written = [v for v in out.values() if "error" not in v]
+        per_story = cost / (len(written) or 1)
+        return {"model": model, "stories": len(reports), "written": len(written),
+                "passed_check": sum(1 for v in written if v["ok"]), "errors": len(errors), "first_error": errors[0] if errors else None,
+                "cost_per_story_usd": per_story, "cost_per_1000_usd": per_story * stories_per_article * 1000, "by_story": out}
+
+    if client is not None:
+        results = [one(m) for m in LLM_MODELS]
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=len(LLM_MODELS)) as pool:
+            results = list(pool.map(one, LLM_MODELS))
+    return {"checker": HEADLINE_CHECKER, "stories": [name for name, _ in stories],
+            "story_sizes": {name: len(ids) for name, ids in stories}, "models": results}
+
+
+# Language models compared as judge and as headline writer (Ahmed, 21 Nov 2026):
+# the two measured before as baselines, then DeepSeek V4.1 Flash, GPT-6 Luna and Gemini 4 Hydrogen.
+LLM_MODELS = [
+    "google/gemini-3.1-flash-lite",
+    "anthropic/claude-haiku-5.5",
+    "deepseek/deepseek-v4.1-flash-1017",
+    "openai/gpt-6-luna",
+    "google/gemini-4-hydrogen",
 ]
+# (judge model, width of the uncertain band below the threshold); 0.25 was the best band so far.
+JUDGE_RUNS = [(m, 0.25) for m in LLM_MODELS]
+# Every writer's headline is checked by the same model, so the pass rates compare.
+HEADLINE_CHECKER = "anthropic/claude-haiku-5.5"
+HEADLINE_STORIES = 12
 
 
 def _judged(base, matrix, judge_model, width, settings, client, rows, by_id, items, gold_pairs, cross, n, progress=None):
@@ -363,10 +423,31 @@ def compare_header(articles: int, gold_pairs: int, cross: int) -> str:
         "Each row uses the threshold with the highest recall at precision 95% or more (or the best balance if none reaches 95%).", ""])
 
 
+def render_headlines(h: dict | None) -> list[str]:
+    if not h:
+        return []
+    lines = ["", f"Headlines: each model writes the {len(h['stories'])} largest answer-key stories; {h['checker']} checks all of them.", ""]
+    for m in h["models"]:
+        lines.append(f"{m['model']}: {m['passed_check']} of {m['written']} passed the check"
+                     + (f", {m['errors']} failed ({m['first_error']})" if m["errors"] else "")
+                     + f"; ${m['cost_per_story_usd']:.5f} per story, about ${m['cost_per_1000_usd']:.3f} per 1,000 articles")
+    for name in h["stories"]:
+        lines += ["", f"{name} ({h['story_sizes'][name]} reports)"]
+        for m in h["models"]:
+            v = m["by_story"].get(name, {})
+            if "error" in v:
+                lines.append(f"  {m['model'].split('/')[-1]}: ERROR")
+                continue
+            mark = "ok" if v.get("ok") else "CHECK: " + "; ".join(v.get("issues") or [])
+            lines.append(f"  {m['model'].split('/')[-1]} [{v.get('importance')}]: {v.get('headline')}  ({mark})")
+    return lines
+
+
 def render_compare(report: dict, rows: bool = True) -> str:
     lines = [compare_header(report["articles"], report["gold_pairs"], report["cross_language_gold_pairs"])] if rows else []
     if rows:
         lines += [render_row(r) for r in report["rows"]]
+    lines += render_headlines(report.get("headlines"))
     for r in report["rows"]:
         if "wrongly_joined" not in r:
             continue
